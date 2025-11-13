@@ -3,32 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Gastos</title>
+    <title>Control de Gastos (Firebase)</title>
     <style>
-        /* CSS Básico para que sea amigable en móviles */
         :root {
+            /* Definición de colores para Modo Claro (default) */
             --color-primario: #007bff;
-            --color-secundario: #f8f9fa;
+            --color-secundario: #f8f9fa; /* Fondo de header de tabla */
             --color-texto: #333;
+            --color-texto-secundario: #777; /* Color para texto de 'small' y 'user-info' */
             --color-error: #dc3545;
             --color-verde: #28a745;
+            
+            --color-fondo-body: #f4f4f4;
+            --color-fondo-main: #ffffff;
+            --color-fondo-input: #ffffff;
+            --color-borde: #ccc;
+            --color-borde-lista: #ddd;
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Redefinición de colores para Modo Oscuro */
+                --color-primario: #007bff; /* Mantenemos el azul como acento */
+                --color-secundario: #33373a; /* Fondo de header de tabla oscuro */
+                --color-texto: #e0e0e0;
+                --color-texto-secundario: #999;
+                
+                --color-fondo-body: #121212;
+                --color-fondo-main: #1e1e1e;
+                --color-fondo-input: #252525;
+                --color-borde: #444;
+                --color-borde-lista: #444;
+            }
+
+            /* Estilos específicos para inputs en modo oscuro */
+            .campo-form input,
+            .campo-form select {
+                background-color: var(--color-fondo-input);
+                color: var(--color-texto);
+            }
+            
+            input::placeholder {
+                color: #777;
+            }
+            input::-webkit-input-placeholder {
+                color: #777;
+            }
+            input::-moz-placeholder {
+                color: #777;
+            }
+        }
+
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: var(--color-fondo-body);
             color: var(--color-texto);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         main {
+            width: 100%;
             max-width: 600px;
             margin: 20px auto;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: var(--color-fondo-main);
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Contenedor de Login */
+        #login-container {
+            text-align: center;
+        }
+        
+        #login-container h1 {
+            color: var(--color-primario);
+        }
+
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        #login-form input {
+            padding: 10px;
+            border: 1px solid var(--color-borde);
+            background-color: var(--color-fondo-input);
+            color: var(--color-texto);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #login-form button, #btn-login-anonimo {
+            padding: 12px;
+            background-color: var(--color-primario);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #btn-login-anonimo {
+            background-color: var(--color-verde);
+        }
+
+        #login-form button:hover {
+            background-color: #0056b3;
+        }
+
+        #forgot-password-link {
+            background: transparent; /* Cambiado de 'none' */
+            border: none;
+            color: var(--color-primario);
+            font-size: 0.9rem;
+            font-weight: normal; /* Añadido para resetear el bold */
+            cursor: pointer;
+            padding: 5px;
+            margin-top: 5px;
+            text-decoration: underline; /* Añadido para que parezca un enlace */
+        }
+
+        #btn-login {
+            padding: 12px 20px;
+            background-color: var(--color-verde);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #login-status {
+            color: var(--color-texto-secundario);
+            margin-top:15px;
+        }
+        
+        /* Contenedor de la App (oculto al inicio) */
+        #app-container {
+            display: none; /* Oculto por defecto */
         }
 
         h1, h2 {
@@ -55,7 +180,9 @@
         .campo-form input,
         .campo-form select {
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--color-borde);
+            background-color: var(--color-fondo-input);
+            color: var(--color-texto);
             border-radius: 5px;
             font-size: 1rem;
         }
@@ -70,10 +197,6 @@
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s;
-        }
-
-        #btn-agregar:hover {
-            background-color: #0056b3;
         }
 
         #resumen {
@@ -95,7 +218,7 @@
 
         #lista-gastos th,
         #lista-gastos td {
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--color-borde-lista);
             padding: 12px 8px;
             text-align: left;
         }
@@ -112,6 +235,10 @@
         
         .gasto-item .descripcion {
             word-break: break-all;
+        }
+
+        .gasto-meta { /* Nueva clase para el texto 'small' */
+            color: var(--color-texto-secundario);
         }
 
         .btn-borrar {
@@ -135,201 +262,423 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        
+        #btn-logout {
+            background-color: var(--color-error);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        
+        #user-info {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--color-texto-secundario);
+            margin-top: 10px;
+        }
 
     </style>
 </head>
 <body>
 
     <main>
-        <h1>Control de Gastos</h1>
-        
-        <form id="form-gastos">
-            <div class="campo-form">
-                <label for="descripcion">Descripción:</label>
-                <input type="text" id="descripcion" placeholder="Ej: Café con amigos" required>
-            </div>
+        <!-- PASO 1: Pantalla de Login -->
+        <div id="login-container">
+            <h1>Bienvenida</h1>
+            <p>Inicia sesión o regístrate para ver tus gastos.</p>
             
-            <div class="campo-form">
-                <label for="monto">Monto:</label>
-                <input type="number" id="monto" min="0.01" step="0.01" placeholder="Ej: 80.50" required>
+            <div id="login-form">
+                <input type="email" id="email" placeholder="Correo electrónico" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button id="btn-login-email">Iniciar Sesión</button>
+                <button id="btn-register-email">Registrar</button>
+                <button id="forgot-password-link" type="button">Olvidé mi contraseña</button>
             </div>
 
-            <div class="campo-form">
-                <label for="categoria">Categoría:</label>
-                <select id="categoria">
-                    <option value="Comida">Comida</option>
-                    <option value="Transporte">Transporte</option>
-                    <option value="Ocio">Ocio</option>
-                    <option value="Servicios">Servicios</option>
-                    <option value="Supermercado">Supermercado</option>
-                    <option value="Ropa">Ropa</option>
-                    <option value="Otros">Otros</option>
-                </select>
-            </div>
-            
-            <div class="campo-form">
-                <label for="fecha">Fecha:</label>
-                <input type="date" id="fecha" required>
-            </div>
-
-            <button type="submit" id="btn-agregar">Agregar Gasto</button>
-        </form>
-
-        <div id="resumen">
-            <h2>Total Gastado:</h2>
-            <span id="total-gastos">$0.00</span>
+            <p>O bien...</p>
+            <button id="btn-login-anonimo">Continuar Anónimamente</button>
+            <p id="login-status"></p>
         </div>
 
-        <h2>Historial de Gastos</h2>
-        <table id="lista-gastos">
-            <thead>
-                <tr>
-                    <th>Gasto</th>
-                    <th>Monto</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="tbody-gastos">
-                </tbody>
-        </table>
+        <!-- PASO 2: Aplicación principal, oculta al inicio -->
+        <div id="app-container">
+            <h1 id="app-title">Control de Gastos</h1>
+            
+            <form id="form-gastos">
+                <div class="campo-form">
+                    <label for="descripcion">Descripción:</label>
+                    <input type="text" id="descripcion" placeholder="Ej: Café con amigos" required>
+                </div>
+                
+                <div class="campo-form">
+                    <label for="monto">Monto:</label>
+                    <input type="number" id="monto" min="0.01" step="0.01" placeholder="Ej: 80.50" required>
+                </div>
 
-        <button id="btn-limpiar-todo">Borrar Todo el Historial</button>
+                <div class="campo-form">
+                    <label for="categoria">Categoría:</label>
+                    <select id="categoria">
+                        <option value="Comida">Comida</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Ocio">Ocio</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Supermercado">Supermercado</option>
+                        <option value="Ropa">Ropa</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                
+                <div class="campo-form">
+                    <label for="fecha">Fecha:</label>
+                    <input type="date" id="fecha" required>
+                </div>
+
+                <button type="submit" id="btn-agregar">Agregar Gasto</button>
+            </form>
+
+            <div id="resumen">
+                <h2>Total Gastado:</h2>
+                <span id="total-gastos">$0.00</span>
+            </div>
+
+            <h2>Historial de Gastos</h2>
+            <table id="lista-gastos">
+                <thead>
+                    <tr>
+                        <th>Gasto</th>
+                        <th>Monto</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-gastos">
+                    <!-- Los gastos se cargarán desde Firebase -->
+                </tbody>
+            </table>
+
+            <button id="btn-limpiar-todo">Borrar Todo el Historial</button>
+            <div id="user-info"></div>
+            <button id="btn-logout">Cerrar Sesión</button>
+        </div>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('form-gastos');
-            const descripcionInput = document.getElementById('descripcion');
-            const montoInput = document.getElementById('monto');
-            const categoriaInput = document.getElementById('categoria');
-            const fechaInput = document.getElementById('fecha');
-            const tbodyGastos = document.getElementById('tbody-gastos');
-            const totalGastosSpan = document.getElementById('total-gastos');
-            const btnLimpiarTodo = document.getElementById('btn-limpiar-todo');
+    <!-- Importar SDKs de Firebase (v11) -->
+    <script type="module">
+        // Importar las funciones necesarias
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-            // Cargar gastos desde localStorage o inicializar un array vacío
-            let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+        // --- 1. CONFIGURACIÓN DE FIREBASE (TU CONFIGURACIÓN) ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDw4ekPFGAhHmSppWp-EZRXWTpnGL8f9ZA",
+          authDomain: "tangamangaming-61473.firebaseapp.com",
+          databaseURL: "https://tangamangaming-61473-default-rtdb.firebaseio.com",
+          projectId: "tangamangaming-61473",
+          storageBucket: "tangamangaming-61473.firebasestorage.app",
+          messagingSenderId: "368255199941",
+          appId: "1:368255199941:web:b87d904dc39bc670091eac",
+          measurementId: "G-28KQ9NPH5R"
+        };
 
-            // --- FUNCIONES ---
+        // --- 2. INICIALIZAR FIREBASE ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app); // Realtime Database
+        
+        let currentUserId = null; // Variable global para guardar el ID del usuario
+        let gastosRef = null; // Variable global para la referencia de la base de datos
 
-            // Función para guardar en localStorage
-            function guardarGastos() {
-                localStorage.setItem('gastos', JSON.stringify(gastos));
-            }
+        // --- 3. REFERENCIAS DEL DOM (Elementos HTML) ---
+        const loginContainer = document.getElementById('login-container');
+        const loginStatus = document.getElementById('login-status');
+        const btnLoginAnonimo = document.getElementById('btn-login-anonimo'); // <-- Cambiado
+        const emailInput = document.getElementById('email'); // <-- Añadido
+        const passwordInput = document.getElementById('password'); // <-- Añadido
+        const btnLoginEmail = document.getElementById('btn-login-email'); // <-- Añadido
+        const btnRegisterEmail = document.getElementById('btn-register-email'); // <-- Añadido
+        const btnForgotPassword = document.getElementById('forgot-password-link'); // <-- Añadido
+        
+        const appContainer = document.getElementById('app-container');
+        const userInfo = document.getElementById('user-info');
+        const appTitle = document.getElementById('app-title'); // <-- Añadido
+        const btnLogout = document.getElementById('btn-logout'); // <-- Añadido
+        
+        const form = document.getElementById('form-gastos');
+        const descripcionInput = document.getElementById('descripcion');
+        const montoInput = document.getElementById('monto');
+        const categoriaInput = document.getElementById('categoria');
+        const fechaInput = document.getElementById('fecha');
+        const tbodyGastos = document.getElementById('tbody-gastos');
+        const totalGastosSpan = document.getElementById('total-gastos');
+        const btnLimpiarTodo = document.getElementById('btn-limpiar-todo');
 
-            // Función para renderizar (dibujar) los gastos en la tabla
-            function renderizarGastos() {
-                // Limpiar la tabla antes de dibujar
-                tbodyGastos.innerHTML = '';
-                let total = 0;
+        // --- 4. LÓGICA DE AUTENTICACIÓN ---
 
-                if (gastos.length === 0) {
-                    tbodyGastos.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No hay gastos registrados.</td></tr>';
-                    totalGastosSpan.textContent = '$0.00';
-                    return;
-                }
-
-                gastos.forEach(gasto => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'gasto-item';
-                    
-                    // Celda 1: Descripción, Categoría y Fecha
-                    tr.innerHTML = `
-                        <td>
-                            <div class.="descripcion">${gasto.descripcion}</div>
-                            <small style="color:#777;">${gasto.categoria} - ${formatearFecha(gasto.fecha)}</small>
-                        </td>
-                        <td class="monto">
-                            -$${gasto.monto.toFixed(2)}
-                        </td>
-                        <td>
-                            <button class="btn-borrar" data-id="${gasto.id}">X</button>
-                        </td>
-                    `;
-                    
-                    tbodyGastos.appendChild(tr);
-                    total += gasto.monto;
+        // Listener para el botón de login anónimo
+        btnLoginAnonimo.addEventListener('click', () => {
+            loginStatus.textContent = 'Iniciando sesión...';
+            signInAnonymously(auth)
+                .catch((error) => {
+                    console.error("Error al iniciar sesión:", error);
+                    loginStatus.textContent = `Error: ${error.message}`;
                 });
-
-                // Actualizar el total
-                totalGastosSpan.textContent = `$${total.toFixed(2)}`;
-            }
-
-            // Función para agregar un gasto
-            function agregarGasto(e) {
-                e.preventDefault(); // Evitar que la página se recargue
-
-                const descripcion = descripcionInput.value.trim();
-                const monto = parseFloat(montoInput.value);
-                const categoria = categoriaInput.value;
-                const fecha = fechaInput.value;
-
-                if (!descripcion || !monto || monto <= 0 || !fecha) {
-                    alert('Por favor, completa todos los campos correctamente.');
-                    return;
-                }
-
-                const nuevoGasto = {
-                    id: Date.now(), // ID único basado en la fecha
-                    descripcion: descripcion,
-                    monto: monto,
-                    categoria: categoria,
-                    fecha: fecha
-                };
-
-                // Agregar al inicio del array (para que aparezca arriba)
-                gastos.unshift(nuevoGasto);
-                
-                guardarGastos();
-                renderizarGastos();
-
-                // Limpiar el formulario
-                form.reset();
-                // Poner la fecha de hoy por defecto de nuevo
-                fechaInput.valueAsDate = new Date();
-            }
-
-            // Función para borrar un gasto
-            function borrarGasto(e) {
-                if (!e.target.classList.contains('btn-borrar')) {
-                    return; // No se hizo clic en el botón de borrar
-                }
-
-                const idGasto = parseInt(e.target.dataset.id);
-                
-                // Filtrar el array, manteniendo todos menos el que coincide con el ID
-                gastos = gastos.filter(gasto => gasto.id !== idGasto);
-                
-                guardarGastos();
-                renderizarGastos();
-            }
-
-            // Función para limpiar todo
-            function limpiarTodo() {
-                if (confirm('¿Estás segura de que quieres borrar ABSOLUTAMENTE TODO el historial? Esta acción no se puede deshacer.')) {
-                    gastos = [];
-                    guardarGastos();
-                    renderizarGastos();
-                }
-            }
-            
-            // Función auxiliar para formatear fecha (YYYY-MM-DD a DD/MM/YYYY)
-            function formatearFecha(fecha) {
-                const [year, month, day] = fecha.split('-');
-                return `${day}/${month}/${year}`;
-            }
-
-            // --- EVENT LISTENERS (Quienes escuchan las acciones) ---
-            form.addEventListener('submit', agregarGasto);
-            tbodyGastos.addEventListener('click', borrarGasto);
-            btnLimpiarTodo.addEventListener('click', limpiarTodo);
-
-            // --- INICIALIZACIÓN ---
-            // Poner la fecha de hoy por defecto al cargar
-            fechaInput.valueAsDate = new Date();
-            // Dibujar los gastos que ya estaban guardados
-            renderizarGastos();
         });
+
+        // Listener para registrar con email
+        btnRegisterEmail.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                loginStatus.textContent = 'Por favor, ingresa correo y contraseña.';
+                return;
+            }
+            loginStatus.textContent = 'Registrando...';
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // onAuthStateChanged se encargará del resto
+                    loginStatus.textContent = '¡Registrado con éxito!';
+                })
+                .catch((error) => {
+                    console.error("Error al registrar:", error);
+                    loginStatus.textContent = `Error: ${error.message}`;
+                });
+        });
+
+        // Listener para iniciar sesión con email
+        btnLoginEmail.addEventListener('click', () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                loginStatus.textContent = 'Por favor, ingresa correo y contraseña.';
+                return;
+            }
+            loginStatus.textContent = 'Iniciando sesión...';
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // onAuthStateChanged se encargará del resto
+                })
+                .catch((error) => {
+                    console.error("Error al iniciar sesión:", error);
+                    loginStatus.textContent = `Error: ${error.message}`;
+                });
+        });
+
+        // Listener para cerrar sesión
+        btnLogout.addEventListener('click', () => {
+            signOut(auth).catch((error) => {
+                console.error("Error al cerrar sesión:", error);
+            });
+        });
+
+        // Listener para 'Olvidé mi contraseña'
+        btnForgotPassword.addEventListener('click', () => {
+            const email = emailInput.value;
+            if (!email) {
+                loginStatus.textContent = 'Por favor, ingresa tu correo para restablecer la contraseña.';
+                return;
+            }
+            loginStatus.textContent = 'Enviando correo de restablecimiento...';
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    loginStatus.textContent = '¡Correo enviado! Revisa tu bandeja de entrada.';
+                })
+                .catch((error) => {
+                    console.error("Error al enviar correo:", error);
+                    loginStatus.textContent = `Error: ${error.message}`;
+                });
+        });
+
+
+        // Observador del estado de autenticación (la función más importante)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuario está logueado
+                currentUserId = user.uid;
+                gastosRef = ref(db, 'gastos/' + currentUserId); // Ruta: /gastos/USER_ID
+                
+                // Ocultar login, mostrar app
+                loginContainer.style.display = 'none';
+                appContainer.style.display = 'block';
+                
+                // --- Personalización ---
+                const userDisplayName = user.email ? user.email.split('@')[0] : `Usuario ${currentUserId.substring(0, 6)}`;
+                userInfo.textContent = `Sesión iniciada como: ${user.email ? user.email : 'Anónimo'}`;
+                appTitle.textContent = `Gastos de ${userDisplayName}`;
+                
+                // Empezar a escuchar los gastos de este usuario
+                escucharGastos();
+                
+                // Poner la fecha de hoy por defecto
+                fechaInput.valueAsDate = new Date();
+                
+            } else {
+                // Usuario no está logueado
+                currentUserId = null;
+                gastosRef = null;
+                
+                // Mostrar login, ocultar app
+                loginContainer.style.display = 'block';
+                appContainer.style.display = 'none';
+                loginStatus.textContent = '';
+                appTitle.textContent = 'Control de Gastos'; // <-- Añadido para resetear
+            }
+        });
+
+        // --- 5. LÓGICA DE BASE DE DATOS (CRUD) ---
+
+        // Función para escuchar cambios en tiempo real
+        function escucharGastos() {
+            if (!gastosRef) return;
+            
+            // onValue se activa CADA VEZ que hay un cambio en esa ruta
+            onValue(gastosRef, (snapshot) => {
+                const gastosData = snapshot.val() || {}; // snapshot.val() es un objeto
+                
+                // Convertir el objeto de Firebase a un array
+                const gastosArray = Object.entries(gastosData).map(([id, data]) => ({
+                    id: id, // El id es la "push key" de Firebase
+                    ...data // ...descripcion, monto, categoria, fecha
+                }));
+                
+                // Ordenar por fecha (más nuevos primero)
+                gastosArray.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                
+                // Renderizar la tabla y el total
+                renderizarGastos(gastosArray);
+            });
+        }
+
+        // Función para renderizar (dibujar) los gastos en la tabla
+        function renderizarGastos(gastos) {
+            tbodyGastos.innerHTML = '';
+            let total = 0;
+
+            if (gastos.length === 0) {
+                tbodyGastos.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No hay gastos registrados.</td></tr>';
+                totalGastosSpan.textContent = '$0.00';
+                return;
+            }
+
+            gastos.forEach(gasto => {
+                const tr = document.createElement('tr');
+                tr.className = 'gasto-item';
+                
+                // CAMBIO AQUÍ: Se usa una clase .gasto-meta en lugar de <small> con estilo en línea
+                tr.innerHTML = `
+                    <td>
+                        <div class="descripcion">${gasto.descripcion}</div>
+                        <span class="gasto-meta">${gasto.categoria} - ${formatearFecha(gasto.fecha)}</span>
+                    </td>
+                    <td class="monto">
+                        -$${parseFloat(gasto.monto).toFixed(2)}
+                    </td>
+                    <td>
+                        <button class="btn-borrar" data-id="${gasto.id}">X</button>
+                    </td>
+                `;
+                
+                tbodyGastos.appendChild(tr);
+                total += parseFloat(gasto.monto);
+            });
+
+            totalGastosSpan.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Función para agregar un gasto
+        function agregarGasto(e) {
+            e.preventDefault();
+            
+            const descripcion = descripcionInput.value.trim();
+            const monto = parseFloat(montoInput.value);
+            const categoria = categoriaInput.value;
+            const fecha = fechaInput.value;
+
+            if (!descripcion || !monto || monto <= 0 || !fecha || !gastosRef) {
+                alert('Por favor, completa todos los campos correctamente.');
+                return;
+            }
+
+            const nuevoGasto = {
+                descripcion: descripcion,
+                monto: monto,
+                categoria: categoria,
+                fecha: fecha
+            };
+            
+            // Crear una nueva referencia única (un nuevo ID)
+            const nuevoGastoRef = push(gastosRef);
+            
+            // Guardar el dato en esa nueva referencia
+            set(nuevoGastoRef, nuevoGasto)
+                .then(() => {
+                    // Éxito. Limpiar formulario
+                    form.reset();
+                    fechaInput.valueAsDate = new Date();
+                })
+                .catch((error) => {
+                    console.error("Error al guardar:", error);
+                    alert("No se pudo guardar el gasto.");
+                });
+            
+            // No necesitamos llamar a renderizarGastos() manualmente.
+            // onValue() lo detectará automáticamente y lo hará por nosotros.
+        }
+
+        // Función para borrar un gasto
+        function borrarGasto(e) {
+            if (!e.target.classList.contains('btn-borrar')) return;
+            
+            const gastoId = e.target.dataset.id;
+            if (!gastoId || !gastosRef) return;
+            
+            if (confirm('¿Quieres borrar este gasto?')) {
+                const gastoABorrarRef = ref(db, `gastos/${currentUserId}/${gastoId}`);
+                remove(gastoABorrarRef)
+                    .catch((error) => {
+                        console.error("Error al borrar:", error);
+                        alert("No se pudo borrar el gasto.");
+                    });
+            }
+        }
+
+        // Función para limpiar todo
+        function limpiarTodo() {
+            if (!gastosRef) return;
+            
+            if (confirm('¿Estás segura de que quieres borrar ABSOLUTAMENTE TODO el historial? Esta acción no se puede deshacer.')) {
+                // Simplemente borramos la referencia de /gastos/USER_ID
+                remove(gastosRef)
+                    .catch((error) => {
+                        console.error("Error al limpiar todo:", error);
+                        alert("No se pudo borrar el historial.");
+                    });
+            }
+        }
+
+        // Función auxiliar para formatear fecha (YYYY-MM-DD a DD/MM/YYYY)
+        function formatearFecha(fecha) {
+            const [year, month, day] = fecha.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // --- 6. EVENT LISTENERS GLOBALES ---
+        form.addEventListener('submit', agregarGasto);
+        tbodyGastos.addEventListener('click', borrarGasto);
+        btnLimpiarTodo.addEventListener('click', limpiarTodo);
+
     </script>
 </body>
 </html>
