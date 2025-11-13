@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos</title>
+    <style>
+        /* CSS Básico para que sea amigable en móviles */
+        :root {
+            --color-primario: #007bff;
+            --color-secundario: #f8f9fa;
+            --color-texto: #333;
+            --color-error: #dc3545;
+            --color-verde: #28a745;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: var(--color-texto);
+        }
+
+        main {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--color-primario);
+        }
+
+        #form-gastos {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .campo-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo-form label {
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .campo-form input,
+        .campo-form select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #btn-agregar {
+            padding: 12px;
+            background-color: var(--color-primario);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #btn-agregar:hover {
+            background-color: #0056b3;
+        }
+
+        #resumen {
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        #total-gastos {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--color-verde);
+        }
+
+        #lista-gastos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #lista-gastos th,
+        #lista-gastos td {
+            border-bottom: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+        }
+
+        #lista-gastos th {
+            background-color: var(--color-secundario);
+        }
+
+        .gasto-item .monto {
+            font-weight: 600;
+            color: var(--color-error);
+            white-space: nowrap;
+        }
+        
+        .gasto-item .descripcion {
+            word-break: break-all;
+        }
+
+        .btn-borrar {
+            background-color: var(--color-error);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        #btn-limpiar-todo {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: var(--color-error);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1>Control de Gastos</h1>
+        
+        <form id="form-gastos">
+            <div class="campo-form">
+                <label for="descripcion">Descripción:</label>
+                <input type="text" id="descripcion" placeholder="Ej: Café con amigos" required>
+            </div>
+            
+            <div class="campo-form">
+                <label for="monto">Monto:</label>
+                <input type="number" id="monto" min="0.01" step="0.01" placeholder="Ej: 80.50" required>
+            </div>
+
+            <div class="campo-form">
+                <label for="categoria">Categoría:</label>
+                <select id="categoria">
+                    <option value="Comida">Comida</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Ocio">Ocio</option>
+                    <option value="Servicios">Servicios</option>
+                    <option value="Supermercado">Supermercado</option>
+                    <option value="Ropa">Ropa</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
+            
+            <div class="campo-form">
+                <label for="fecha">Fecha:</label>
+                <input type="date" id="fecha" required>
+            </div>
+
+            <button type="submit" id="btn-agregar">Agregar Gasto</button>
+        </form>
+
+        <div id="resumen">
+            <h2>Total Gastado:</h2>
+            <span id="total-gastos">$0.00</span>
+        </div>
+
+        <h2>Historial de Gastos</h2>
+        <table id="lista-gastos">
+            <thead>
+                <tr>
+                    <th>Gasto</th>
+                    <th>Monto</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-gastos">
+                </tbody>
+        </table>
+
+        <button id="btn-limpiar-todo">Borrar Todo el Historial</button>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('form-gastos');
+            const descripcionInput = document.getElementById('descripcion');
+            const montoInput = document.getElementById('monto');
+            const categoriaInput = document.getElementById('categoria');
+            const fechaInput = document.getElementById('fecha');
+            const tbodyGastos = document.getElementById('tbody-gastos');
+            const totalGastosSpan = document.getElementById('total-gastos');
+            const btnLimpiarTodo = document.getElementById('btn-limpiar-todo');
+
+            // Cargar gastos desde localStorage o inicializar un array vacío
+            let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+
+            // --- FUNCIONES ---
+
+            // Función para guardar en localStorage
+            function guardarGastos() {
+                localStorage.setItem('gastos', JSON.stringify(gastos));
+            }
+
+            // Función para renderizar (dibujar) los gastos en la tabla
+            function renderizarGastos() {
+                // Limpiar la tabla antes de dibujar
+                tbodyGastos.innerHTML = '';
+                let total = 0;
+
+                if (gastos.length === 0) {
+                    tbodyGastos.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No hay gastos registrados.</td></tr>';
+                    totalGastosSpan.textContent = '$0.00';
+                    return;
+                }
+
+                gastos.forEach(gasto => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'gasto-item';
+                    
+                    // Celda 1: Descripción, Categoría y Fecha
+                    tr.innerHTML = `
+                        <td>
+                            <div class.="descripcion">${gasto.descripcion}</div>
+                            <small style="color:#777;">${gasto.categoria} - ${formatearFecha(gasto.fecha)}</small>
+                        </td>
+                        <td class="monto">
+                            -$${gasto.monto.toFixed(2)}
+                        </td>
+                        <td>
+                            <button class="btn-borrar" data-id="${gasto.id}">X</button>
+                        </td>
+                    `;
+                    
+                    tbodyGastos.appendChild(tr);
+                    total += gasto.monto;
+                });
+
+                // Actualizar el total
+                totalGastosSpan.textContent = `$${total.toFixed(2)}`;
+            }
+
+            // Función para agregar un gasto
+            function agregarGasto(e) {
+                e.preventDefault(); // Evitar que la página se recargue
+
+                const descripcion = descripcionInput.value.trim();
+                const monto = parseFloat(montoInput.value);
+                const categoria = categoriaInput.value;
+                const fecha = fechaInput.value;
+
+                if (!descripcion || !monto || monto <= 0 || !fecha) {
+                    alert('Por favor, completa todos los campos correctamente.');
+                    return;
+                }
+
+                const nuevoGasto = {
+                    id: Date.now(), // ID único basado en la fecha
+                    descripcion: descripcion,
+                    monto: monto,
+                    categoria: categoria,
+                    fecha: fecha
+                };
+
+                // Agregar al inicio del array (para que aparezca arriba)
+                gastos.unshift(nuevoGasto);
+                
+                guardarGastos();
+                renderizarGastos();
+
+                // Limpiar el formulario
+                form.reset();
+                // Poner la fecha de hoy por defecto de nuevo
+                fechaInput.valueAsDate = new Date();
+            }
+
+            // Función para borrar un gasto
+            function borrarGasto(e) {
+                if (!e.target.classList.contains('btn-borrar')) {
+                    return; // No se hizo clic en el botón de borrar
+                }
+
+                const idGasto = parseInt(e.target.dataset.id);
+                
+                // Filtrar el array, manteniendo todos menos el que coincide con el ID
+                gastos = gastos.filter(gasto => gasto.id !== idGasto);
+                
+                guardarGastos();
+                renderizarGastos();
+            }
+
+            // Función para limpiar todo
+            function limpiarTodo() {
+                if (confirm('¿Estás segura de que quieres borrar ABSOLUTAMENTE TODO el historial? Esta acción no se puede deshacer.')) {
+                    gastos = [];
+                    guardarGastos();
+                    renderizarGastos();
+                }
+            }
+            
+            // Función auxiliar para formatear fecha (YYYY-MM-DD a DD/MM/YYYY)
+            function formatearFecha(fecha) {
+                const [year, month, day] = fecha.split('-');
+                return `${day}/${month}/${year}`;
+            }
+
+            // --- EVENT LISTENERS (Quienes escuchan las acciones) ---
+            form.addEventListener('submit', agregarGasto);
+            tbodyGastos.addEventListener('click', borrarGasto);
+            btnLimpiarTodo.addEventListener('click', limpiarTodo);
+
+            // --- INICIALIZACIÓN ---
+            // Poner la fecha de hoy por defecto al cargar
+            fechaInput.valueAsDate = new Date();
+            // Dibujar los gastos que ya estaban guardados
+            renderizarGastos();
+        });
+    </script>
+</body>
+</html>
