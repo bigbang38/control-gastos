@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Gastos (Firebase)</title>
+    <title>Finanzas Bici-Repartidor</title>
     <style>
         :root {
-            /* Definición de colores para Modo Claro (default) */
             --color-primario: #007bff;
-            --color-secundario: #f8f9fa; /* Fondo de header de tabla */
+            --color-secundario: #f8f9fa;
             --color-texto: #333;
-            --color-texto-secundario: #777; /* Color para texto de 'small' y 'user-info' */
-            --color-error: #dc3545;
-            --color-verde: #28a745;
+            --color-texto-secundario: #777;
+            --color-error: #dc3545; /* Rojo para Gastos */
+            --color-exito: #28a745; /* Verde para Ingresos */
             
             --color-fondo-body: #f4f4f4;
             --color-fondo-main: #ffffff;
@@ -23,9 +22,8 @@
 
         @media (prefers-color-scheme: dark) {
             :root {
-                /* Redefinición de colores para Modo Oscuro */
-                --color-primario: #007bff; /* Mantenemos el azul como acento */
-                --color-secundario: #33373a; /* Fondo de header de tabla oscuro */
+                --color-primario: #4da3ff; 
+                --color-secundario: #33373a;
                 --color-texto: #e0e0e0;
                 --color-texto-secundario: #999;
                 
@@ -35,353 +33,130 @@
                 --color-borde: #444;
                 --color-borde-lista: #444;
             }
-
-            /* Estilos específicos para inputs en modo oscuro */
-            .campo-form input,
-            .campo-form select {
-                background-color: var(--color-fondo-input);
-                color: var(--color-texto);
-            }
-            
-            input::placeholder {
-                color: #777;
-            }
-            input::-webkit-input-placeholder {
-                color: #777;
-            }
-            input::-moz-placeholder {
-                color: #777;
-            }
         }
 
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--color-fondo-body);
-            color: var(--color-texto);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        main {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: var(--color-fondo-main);
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--color-fondo-body); color: var(--color-texto); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        main { width: 100%; max-width: 600px; margin: 20px auto; padding: 20px; background-color: var(--color-fondo-main); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
-        /* Contenedor de Login */
-        #login-container {
-            text-align: center;
-        }
+        /* Login */
+        #login-container { text-align: center; }
+        #login-form { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        #login-form input, #login-form button { padding: 12px; border-radius: 5px; border: 1px solid var(--color-borde); }
+        #login-form input { background: var(--color-fondo-input); color: var(--color-texto); }
+        #login-form button { background: var(--color-primario); color: white; border: none; font-weight: bold; cursor: pointer; }
         
-        #login-container h1 {
-            color: var(--color-primario);
-        }
-
-        #login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        #login-form input {
-            padding: 10px;
-            border: 1px solid var(--color-borde);
-            background-color: var(--color-fondo-input);
-            color: var(--color-texto);
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        #login-form button, #btn-login-anonimo {
-            padding: 12px;
-            background-color: var(--color-primario);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+        /* App Principal */
+        #app-container { display: none; }
+        h1, h2 { text-align: center; color: var(--color-primario); }
         
-        #btn-login-anonimo {
-            background-color: var(--color-verde);
-        }
-
-        #login-form button:hover {
-            background-color: #0056b3;
-        }
-
-        #forgot-password-link {
-            background: transparent; /* Cambiado de 'none' */
-            border: none;
-            color: var(--color-primario);
-            font-size: 0.9rem;
-            font-weight: normal; /* Añadido para resetear el bold */
-            cursor: pointer;
-            padding: 5px;
-            margin-top: 5px;
-            text-decoration: underline; /* Añadido para que parezca un enlace */
-        }
-
-        #btn-login {
-            padding: 12px 20px;
-            background-color: var(--color-verde);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #login-status {
-            color: var(--color-texto-secundario);
-            margin-top:15px;
-        }
+        /* Balance Dashboard */
+        #resumen { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-borde); padding-bottom: 20px; }
+        #total-balance { font-size: 2.5rem; font-weight: bold; display: block; margin: 10px 0; }
+        .positivo { color: var(--color-exito); }
+        .negativo { color: var(--color-error); }
         
-        /* Contenedor de la App (oculto al inicio) */
-        #app-container {
-            display: none; /* Oculto por defecto */
-        }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .stat-box { background: var(--color-secundario); padding: 10px; border-radius: 8px; }
+        .stat-box span { font-size: 0.8rem; color: var(--color-texto-secundario); }
+        .stat-box strong { display: block; font-size: 1.1rem; }
 
-        h1, h2 {
-            text-align: center;
-            color: var(--color-primario);
-        }
-
-        #form-gastos {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .campo-form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .campo-form label {
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .campo-form input,
-        .campo-form select {
-            padding: 10px;
-            border: 1px solid var(--color-borde);
-            background-color: var(--color-fondo-input);
-            color: var(--color-texto);
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        #btn-agregar {
-            padding: 12px;
-            background-color: var(--color-primario);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #resumen {
-            text-align: center;
-            margin: 25px 0;
-        }
-
-        #total-gastos {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--color-verde);
-        }
-
-        #lista-gastos {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        #lista-gastos th,
-        #lista-gastos td {
-            border-bottom: 1px solid var(--color-borde-lista);
-            padding: 12px 8px;
-            text-align: left;
-        }
-
-        #lista-gastos th {
-            background-color: var(--color-secundario);
-        }
-
-        .gasto-item .monto {
-            font-weight: 600;
-            color: var(--color-error);
-            white-space: nowrap;
-        }
+        /* Formulario */
+        #form-movimientos { display: flex; flex-direction: column; gap: 12px; background: var(--color-secundario); padding: 15px; border-radius: 8px; }
+        .fila-form { display: flex; gap: 10px; }
+        .campo-form { display: flex; flex-direction: column; flex: 1; }
+        .campo-form label { margin-bottom: 5px; font-weight: 600; font-size: 0.8rem; }
         
-        .gasto-item .descripcion {
-            word-break: break-all;
-        }
-
-        .gasto-meta { /* Nueva clase para el texto 'small' */
-            color: var(--color-texto-secundario);
-        }
-
-        .btn-borrar {
-            background-color: var(--color-error);
-            color: white;
-            border: none;
-            padding: 5px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        #btn-limpiar-todo {
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-            padding: 10px;
-            background-color: var(--color-error);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        input, select { padding: 10px; border: 1px solid var(--color-borde); background-color: var(--color-fondo-input); color: var(--color-texto); border-radius: 5px; font-size: 1rem; }
         
-        #btn-logout {
-            background-color: var(--color-error);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 1rem;
-            margin-top: 10px;
-        }
+        #btn-agregar { padding: 12px; background-color: var(--color-primario); color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; margin-top: 5px; cursor: pointer; }
         
-        #user-info {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--color-texto-secundario);
-            margin-top: 10px;
-        }
+        /* Tabla */
+        .tabla-datos { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .tabla-datos td { border-bottom: 1px solid var(--color-borde-lista); padding: 12px 5px; vertical-align: middle; }
+        .monto-ingreso { color: var(--color-exito); font-weight: bold; }
+        .monto-gasto { color: var(--color-error); font-weight: bold; }
+        .detalle-meta { font-size: 0.8rem; color: var(--color-texto-secundario); display: block; margin-top: 3px;}
+        .btn-borrar { background: transparent; border: none; color: var(--color-texto-secundario); font-size: 1.2rem; cursor: pointer; }
+
+        #btn-logout { background-color: var(--color-error); color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; margin-top: 30px; cursor: pointer; }
 
     </style>
 </head>
 <body>
 
     <main>
-        <!-- PASO 1: Pantalla de Login -->
         <div id="login-container">
-            <h1>Bienvenida</h1>
-            <p>Inicia sesión o regístrate para ver tus gastos.</p>
-            
+            <h1>Bici-Finanzas 🚲</h1>
+            <p>Controla tus ganancias vs. refacciones y "editivos".</p>
             <div id="login-form">
-                <input type="email" id="email" placeholder="Correo electrónico" required>
+                <input type="email" id="email" placeholder="Correo" required>
                 <input type="password" id="password" placeholder="Contraseña" required>
-                <button id="btn-login-email">Iniciar Sesión</button>
-                <button id="btn-register-email">Registrar</button>
-                <button id="forgot-password-link" type="button">Olvidé mi contraseña</button>
+                <button id="btn-login-email">Entrar / Registrar</button>
             </div>
-
-            <p>O bien...</p>
-            <button id="btn-login-anonimo">Continuar Anónimamente</button>
             <p id="login-status"></p>
         </div>
 
-        <!-- PASO 2: Aplicación principal, oculta al inicio -->
         <div id="app-container">
-            <h1 id="app-title">Control de Gastos</h1>
             
-            <form id="form-gastos">
-                <div class="campo-form">
-                    <label for="descripcion">Descripción:</label>
-                    <input type="text" id="descripcion" placeholder="Ej: Café con amigos" required>
-                </div>
-                
-                <div class="campo-form">
-                    <label for="monto">Monto:</label>
-                    <input type="number" id="monto" min="0.01" step="0.01" placeholder="Ej: 80.50" required>
-                </div>
-
-                <div class="campo-form">
-                    <label for="categoria">Categoría:</label>
-                    <select id="categoria">
-                        <option value="Comida">Comida</option>
-                        <option value="Transporte">Transporte</option>
-                        <option value="Ocio">Ocio</option>
-                        <option value="Servicios">Servicios</option>
-                        <option value="Supermercado">Supermercado</option>
-                        <option value="Ropa">Ropa</option>
-                        <option value="Otros">Otros</option>
-                    </select>
-                </div>
-                
-                <div class="campo-form">
-                    <label for="fecha">Fecha:</label>
-                    <input type="date" id="fecha" required>
-                </div>
-
-                <button type="submit" id="btn-agregar">Agregar Gasto</button>
-            </form>
-
             <div id="resumen">
-                <h2>Total Gastado:</h2>
-                <span id="total-gastos">$0.00</span>
+                <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Utilidad Neta</div>
+                <span id="total-balance">$0.00</span>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span>Ingresos (Uber)</span>
+                        <strong id="dash-ingresos" class="positivo">$0.00</strong>
+                    </div>
+                    <div class="stat-box">
+                        <span>Gastos (Bici/Vida)</span>
+                        <strong id="dash-gastos" class="negativo">$0.00</strong>
+                    </div>
+                </div>
             </div>
 
-            <h2>Historial de Gastos</h2>
-            <table id="lista-gastos">
-                <thead>
-                    <tr>
-                        <th>Gasto</th>
-                        <th>Monto</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-gastos">
-                    <!-- Los gastos se cargarán desde Firebase -->
-                </tbody>
-            </table>
+            <form id="form-movimientos">
+                <div class="fila-form">
+                    <div class="campo-form" style="flex: 0 0 40%;">
+                        <label>Tipo</label>
+                        <select id="tipo-movimiento">
+                            <option value="ingreso">🤑 Ingreso</option>
+                            <option value="gasto">💸 Gasto</option>
+                        </select>
+                    </div>
+                    <div class="campo-form">
+                        <label>Monto ($)</label>
+                        <input type="number" id="monto" min="0.01" step="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
 
-            <button id="btn-limpiar-todo">Borrar Todo el Historial</button>
-            <div id="user-info"></div>
+                <div class="campo-form">
+                    <label>Categoría</label>
+                    <select id="categoria">
+                        </select>
+                </div>
+
+                <div class="campo-form">
+                    <label>Detalle (Opcional)</label>
+                    <input type="text" id="descripcion" placeholder="Ej: Piñón nuevo, Semana 45...">
+                </div>
+                
+                <input type="date" id="fecha" required style="display:none;"> <button type="submit" id="btn-agregar">Registrar</button>
+            </form>
+
+            <h3 style="margin-top: 25px; margin-bottom: 10px;">Movimientos Recientes</h3>
+            <table id="lista-movimientos" class="tabla-datos">
+                <tbody id="tbody-movimientos"></tbody>
+            </table>
+            
             <button id="btn-logout">Cerrar Sesión</button>
         </div>
     </main>
 
-    <!-- Importar SDKs de Firebase (v11) -->
     <script type="module">
-        // Importar las funciones necesarias
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInAnonymously, 
-            onAuthStateChanged,
-            createUserWithEmailAndPassword,
-            signInWithEmailAndPassword,
-            signOut,
-            sendPasswordResetEmail
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // --- 1. CONFIGURACIÓN DE FIREBASE (TU CONFIGURACIÓN) ---
         const firebaseConfig = {
           apiKey: "AIzaSyDw4ekPFGAhHmSppWp-EZRXWTpnGL8f9ZA",
           authDomain: "tangamangaming-61473.firebaseapp.com",
@@ -393,292 +168,134 @@
           measurementId: "G-28KQ9NPH5R"
         };
 
-        // --- 2. INICIALIZAR FIREBASE ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getDatabase(app); // Realtime Database
-        
-        let currentUserId = null; // Variable global para guardar el ID del usuario
-        let gastosRef = null; // Variable global para la referencia de la base de datos
+        const db = getDatabase(app);
+        let currentUserId = null;
+        let movimientosRef = null;
 
-        // --- 3. REFERENCIAS DEL DOM (Elementos HTML) ---
+        // Elementos
         const loginContainer = document.getElementById('login-container');
-        const loginStatus = document.getElementById('login-status');
-        const btnLoginAnonimo = document.getElementById('btn-login-anonimo'); // <-- Cambiado
-        const emailInput = document.getElementById('email'); // <-- Añadido
-        const passwordInput = document.getElementById('password'); // <-- Añadido
-        const btnLoginEmail = document.getElementById('btn-login-email'); // <-- Añadido
-        const btnRegisterEmail = document.getElementById('btn-register-email'); // <-- Añadido
-        const btnForgotPassword = document.getElementById('forgot-password-link'); // <-- Añadido
-        
         const appContainer = document.getElementById('app-container');
-        const userInfo = document.getElementById('user-info');
-        const appTitle = document.getElementById('app-title'); // <-- Añadido
-        const btnLogout = document.getElementById('btn-logout'); // <-- Añadido
-        
-        const form = document.getElementById('form-gastos');
-        const descripcionInput = document.getElementById('descripcion');
-        const montoInput = document.getElementById('monto');
-        const categoriaInput = document.getElementById('categoria');
-        const fechaInput = document.getElementById('fecha');
-        const tbodyGastos = document.getElementById('tbody-gastos');
-        const totalGastosSpan = document.getElementById('total-gastos');
-        const btnLimpiarTodo = document.getElementById('btn-limpiar-todo');
+        const emailIn = document.getElementById('email');
+        const passIn = document.getElementById('password');
+        const statusMsg = document.getElementById('login-status');
+        const form = document.getElementById('form-movimientos');
+        const tipoSelect = document.getElementById('tipo-movimiento');
+        const categoriaSelect = document.getElementById('categoria');
 
-        // --- 4. LÓGICA DE AUTENTICACIÓN ---
+        // --- CATEGORÍAS PERSONALIZADAS PARA TI ---
+        const catsIngreso = ["Ganancias Uber", "Propinas Efectivo", "Otros Ingresos"];
+        const catsGasto = [
+            "Editivos / Relax 👽", 
+            "Mantenimiento Bici (Piñón/Llantas)", 
+            "Equipo (Celular/Mica)", 
+            "Comida/Hidratación", 
+            "Datos Móviles", 
+            "Otros"
+        ];
 
-        // Listener para el botón de login anónimo
-        btnLoginAnonimo.addEventListener('click', () => {
-            loginStatus.textContent = 'Iniciando sesión...';
-            signInAnonymously(auth)
-                .catch((error) => {
-                    console.error("Error al iniciar sesión:", error);
-                    loginStatus.textContent = `Error: ${error.message}`;
-                });
-        });
-
-        // Listener para registrar con email
-        btnRegisterEmail.addEventListener('click', () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            if (!email || !password) {
-                loginStatus.textContent = 'Por favor, ingresa correo y contraseña.';
-                return;
-            }
-            loginStatus.textContent = 'Registrando...';
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    // onAuthStateChanged se encargará del resto
-                    loginStatus.textContent = '¡Registrado con éxito!';
-                })
-                .catch((error) => {
-                    console.error("Error al registrar:", error);
-                    loginStatus.textContent = `Error: ${error.message}`;
-                });
-        });
-
-        // Listener para iniciar sesión con email
-        btnLoginEmail.addEventListener('click', () => {
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            if (!email || !password) {
-                loginStatus.textContent = 'Por favor, ingresa correo y contraseña.';
-                return;
-            }
-            loginStatus.textContent = 'Iniciando sesión...';
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    // onAuthStateChanged se encargará del resto
-                })
-                .catch((error) => {
-                    console.error("Error al iniciar sesión:", error);
-                    loginStatus.textContent = `Error: ${error.message}`;
-                });
-        });
-
-        // Listener para cerrar sesión
-        btnLogout.addEventListener('click', () => {
-            signOut(auth).catch((error) => {
-                console.error("Error al cerrar sesión:", error);
+        function actualizarCategorias() {
+            const tipo = tipoSelect.value;
+            categoriaSelect.innerHTML = '';
+            const lista = tipo === 'ingreso' ? catsIngreso : catsGasto;
+            lista.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                categoriaSelect.appendChild(opt);
             });
-        });
+        }
+        tipoSelect.addEventListener('change', actualizarCategorias);
+        actualizarCategorias();
 
-        // Listener para 'Olvidé mi contraseña'
-        btnForgotPassword.addEventListener('click', () => {
-            const email = emailInput.value;
-            if (!email) {
-                loginStatus.textContent = 'Por favor, ingresa tu correo para restablecer la contraseña.';
-                return;
-            }
-            loginStatus.textContent = 'Enviando correo de restablecimiento...';
-            sendPasswordResetEmail(auth, email)
-                .then(() => {
-                    loginStatus.textContent = '¡Correo enviado! Revisa tu bandeja de entrada.';
-                })
-                .catch((error) => {
-                    console.error("Error al enviar correo:", error);
-                    loginStatus.textContent = `Error: ${error.message}`;
-                });
-        });
-
-
-        // Observador del estado de autenticación (la función más importante)
+        // --- AUTH ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Usuario está logueado
                 currentUserId = user.uid;
-                gastosRef = ref(db, 'gastos/' + currentUserId); // Ruta: /gastos/USER_ID
-                
-                // Ocultar login, mostrar app
+                movimientosRef = ref(db, 'finanzas_bici/' + currentUserId);
                 loginContainer.style.display = 'none';
                 appContainer.style.display = 'block';
-                
-                // --- Personalización ---
-                const userDisplayName = user.email ? user.email.split('@')[0] : `Usuario ${currentUserId.substring(0, 6)}`;
-                userInfo.textContent = `Sesión iniciada como: ${user.email ? user.email : 'Anónimo'}`;
-                appTitle.textContent = `Gastos de ${userDisplayName}`;
-                
-                // Empezar a escuchar los gastos de este usuario
-                escucharGastos();
-                
-                // Poner la fecha de hoy por defecto
-                fechaInput.valueAsDate = new Date();
-                
+                escucharMovimientos();
             } else {
-                // Usuario no está logueado
-                currentUserId = null;
-                gastosRef = null;
-                
-                // Mostrar login, ocultar app
                 loginContainer.style.display = 'block';
                 appContainer.style.display = 'none';
-                loginStatus.textContent = '';
-                appTitle.textContent = 'Control de Gastos'; // <-- Añadido para resetear
             }
         });
 
-        // --- 5. LÓGICA DE BASE DE DATOS (CRUD) ---
+        document.getElementById('btn-login-email').onclick = () => {
+            const email = emailIn.value;
+            const pass = passIn.value;
+            signInWithEmailAndPassword(auth, email, pass)
+                .catch(() => {
+                    // Si falla login, intentamos registrar
+                    createUserWithEmailAndPassword(auth, email, pass)
+                        .catch(e => statusMsg.textContent = e.message);
+                });
+        };
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
 
-        // Función para escuchar cambios en tiempo real
-        function escucharGastos() {
-            if (!gastosRef) return;
-            
-            // onValue se activa CADA VEZ que hay un cambio en esa ruta
-            onValue(gastosRef, (snapshot) => {
-                const gastosData = snapshot.val() || {}; // snapshot.val() es un objeto
-                
-                // Convertir el objeto de Firebase a un array
-                const gastosArray = Object.entries(gastosData).map(([id, data]) => ({
-                    id: id, // El id es la "push key" de Firebase
-                    ...data // ...descripcion, monto, categoria, fecha
-                }));
-                
-                // Ordenar por fecha (más nuevos primero)
-                gastosArray.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-                
-                // Renderizar la tabla y el total
-                renderizarGastos(gastosArray);
+        // --- DB ---
+        function escucharMovimientos() {
+            onValue(movimientosRef, (snapshot) => {
+                const data = snapshot.val() || {};
+                const lista = Object.entries(data).map(([id, val]) => ({id, ...val}));
+                lista.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                renderizar(lista);
             });
         }
 
-        // Función para renderizar (dibujar) los gastos en la tabla
-        function renderizarGastos(gastos) {
-            tbodyGastos.innerHTML = '';
-            let total = 0;
+        function renderizar(lista) {
+            const tbody = document.getElementById('tbody-movimientos');
+            tbody.innerHTML = '';
+            let ing = 0, gas = 0;
 
-            if (gastos.length === 0) {
-                tbodyGastos.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No hay gastos registrados.</td></tr>';
-                totalGastosSpan.textContent = '$0.00';
-                return;
-            }
+            lista.forEach(mov => {
+                const monto = parseFloat(mov.monto);
+                if (mov.tipo === 'ingreso') ing += monto; else gas += monto;
 
-            gastos.forEach(gasto => {
                 const tr = document.createElement('tr');
-                tr.className = 'gasto-item';
-                
-                // CAMBIO AQUÍ: Se usa una clase .gasto-meta en lugar de <small> con estilo en línea
                 tr.innerHTML = `
                     <td>
-                        <div class="descripcion">${gasto.descripcion}</div>
-                        <span class="gasto-meta">${gasto.categoria} - ${formatearFecha(gasto.fecha)}</span>
+                        <div style="font-weight:600;">${mov.categoria}</div>
+                        <span class="detalle-meta">${mov.descripcion ? mov.descripcion + ' • ' : ''}${new Date(mov.timestamp).toLocaleDateString()}</span>
                     </td>
-                    <td class="monto">
-                        -$${parseFloat(gasto.monto).toFixed(2)}
+                    <td class="${mov.tipo === 'ingreso' ? 'monto-ingreso' : 'monto-gasto'}" style="text-align:right;">
+                        ${mov.tipo === 'ingreso' ? '+' : '-'}$${monto.toFixed(2)}
                     </td>
-                    <td>
-                        <button class="btn-borrar" data-id="${gasto.id}">X</button>
+                    <td style="width:30px; text-align:right;">
+                        <button class="btn-borrar" data-id="${mov.id}">×</button>
                     </td>
                 `;
-                
-                tbodyGastos.appendChild(tr);
-                total += parseFloat(gasto.monto);
+                tbody.appendChild(tr);
             });
 
-            totalGastosSpan.textContent = `$${total.toFixed(2)}`;
+            const balance = ing - gas;
+            const elBal = document.getElementById('total-balance');
+            elBal.textContent = `$${balance.toFixed(2)}`;
+            elBal.className = balance >= 0 ? 'positivo' : 'negativo';
+            document.getElementById('dash-ingresos').textContent = `$${ing.toFixed(2)}`;
+            document.getElementById('dash-gastos').textContent = `$${gas.toFixed(2)}`;
         }
 
-        // Función para agregar un gasto
-        function agregarGasto(e) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const descripcion = descripcionInput.value.trim();
-            const monto = parseFloat(montoInput.value);
-            const categoria = categoriaInput.value;
-            const fecha = fechaInput.value;
+            push(movimientosRef, {
+                tipo: tipoSelect.value,
+                monto: document.getElementById('monto').value,
+                categoria: categoriaSelect.value,
+                descripcion: document.getElementById('descripcion').value,
+                timestamp: Date.now()
+            });
+            form.reset();
+            actualizarCategorias();
+        });
 
-            if (!descripcion || !monto || monto <= 0 || !fecha || !gastosRef) {
-                alert('Por favor, completa todos los campos correctamente.');
-                return;
+        document.getElementById('tbody-movimientos').addEventListener('click', (e) => {
+            if(e.target.classList.contains('btn-borrar')) {
+                if(confirm('¿Borrar?')) remove(ref(db, `finanzas_bici/${currentUserId}/${e.target.dataset.id}`));
             }
-
-            const nuevoGasto = {
-                descripcion: descripcion,
-                monto: monto,
-                categoria: categoria,
-                fecha: fecha
-            };
-            
-            // Crear una nueva referencia única (un nuevo ID)
-            const nuevoGastoRef = push(gastosRef);
-            
-            // Guardar el dato en esa nueva referencia
-            set(nuevoGastoRef, nuevoGasto)
-                .then(() => {
-                    // Éxito. Limpiar formulario
-                    form.reset();
-                    fechaInput.valueAsDate = new Date();
-                })
-                .catch((error) => {
-                    console.error("Error al guardar:", error);
-                    alert("No se pudo guardar el gasto.");
-                });
-            
-            // No necesitamos llamar a renderizarGastos() manualmente.
-            // onValue() lo detectará automáticamente y lo hará por nosotros.
-        }
-
-        // Función para borrar un gasto
-        function borrarGasto(e) {
-            if (!e.target.classList.contains('btn-borrar')) return;
-            
-            const gastoId = e.target.dataset.id;
-            if (!gastoId || !gastosRef) return;
-            
-            if (confirm('¿Quieres borrar este gasto?')) {
-                const gastoABorrarRef = ref(db, `gastos/${currentUserId}/${gastoId}`);
-                remove(gastoABorrarRef)
-                    .catch((error) => {
-                        console.error("Error al borrar:", error);
-                        alert("No se pudo borrar el gasto.");
-                    });
-            }
-        }
-
-        // Función para limpiar todo
-        function limpiarTodo() {
-            if (!gastosRef) return;
-            
-            if (confirm('¿Estás segura de que quieres borrar ABSOLUTAMENTE TODO el historial? Esta acción no se puede deshacer.')) {
-                // Simplemente borramos la referencia de /gastos/USER_ID
-                remove(gastosRef)
-                    .catch((error) => {
-                        console.error("Error al limpiar todo:", error);
-                        alert("No se pudo borrar el historial.");
-                    });
-            }
-        }
-
-        // Función auxiliar para formatear fecha (YYYY-MM-DD a DD/MM/YYYY)
-        function formatearFecha(fecha) {
-            const [year, month, day] = fecha.split('-');
-            return `${day}/${month}/${year}`;
-        }
-
-        // --- 6. EVENT LISTENERS GLOBALES ---
-        form.addEventListener('submit', agregarGasto);
-        tbodyGastos.addEventListener('click', borrarGasto);
-        btnLimpiarTodo.addEventListener('click', limpiarTodo);
-
+        });
     </script>
 </body>
 </html>
