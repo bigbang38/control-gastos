@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Didi Tracker Pro 🚲</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --color-primario: #007bff;
+            --color-secundario: #f8f9fa;
+            --color-texto: #333;
+            --color-texto-secundario: #777;
+            --color-error: #dc3545;
+            --color-verde: #28a745;
+            --color-fondo-body: #f4f4f4;
+            --color-fondo-main: #ffffff;
+            --color-fondo-input: #ffffff;
+            --color-borde: #ccc;
+            --color-borde-lista: #ddd;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-primario: #0a84ff; 
+                --color-secundario: #2c2c2e;
+                --color-texto: #e0e0e0;
+                --color-texto-secundario: #a1a1a6;
+                --color-fondo-body: #000000;
+                --color-fondo-main: #1c1c1e;
+                --color-fondo-input: #2c2c2e;
+                --color-borde: #3a3a3c;
+                --color-borde-lista: #3a3a3c;
+            }
+            input::placeholder, textarea::placeholder { color: #777; }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-fondo-body);
+            color: var(--color-texto);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        main {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--color-fondo-main);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        /* Login */
+        #login-container { text-align: center; }
+        #login-form { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        #login-form input { padding: 12px; border: 1px solid var(--color-borde); background-color: var(--color-fondo-input); color: var(--color-texto); border-radius: 8px; font-size: 1rem; }
+        #login-form button, #btn-login-anonimo { padding: 12px; background-color: var(--color-primario); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        #btn-login-anonimo { background-color: var(--color-verde); }
+        #forgot-password-link { background: transparent; border: none; color: var(--color-primario); cursor: pointer; text-decoration: underline; margin-top: 10px; }
+        
+        /* App */
+        #app-container { display: none; }
+        h1 { text-align: center; color: var(--color-primario); margin-bottom: 5px; }
+        
+        /* Balance */
+        #resumen-balance {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 12px;
+            background-color: var(--color-secundario);
+        }
+        #resumen-balance h2 { margin: 0 0 10px 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-texto-secundario); }
+        #balance-neto { font-size: 2.5rem; font-weight: 800; display: block; margin-bottom: 10px; }
+        .balance-positivo { color: var(--color-verde); }
+        .balance-negativo { color: var(--color-error); }
+        #resumen-detalle { display: flex; justify-content: space-around; font-size: 0.95rem; }
+        
+        /* Formulario */
+        #form-transaccion { display: flex; flex-direction: column; gap: 12px; background: var(--color-secundario); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .fila-form { display: flex; gap: 10px; }
+        .campo-form { display: flex; flex-direction: column; flex: 1; }
+        .campo-form label { margin-bottom: 4px; font-size: 0.85rem; font-weight: 600; color: var(--color-texto-secundario); }
+        .campo-form input, .campo-form select, .campo-form textarea {
+            padding: 10px;
+            border: 1px solid var(--color-borde);
+            background-color: var(--color-fondo-main); /* Contraste dentro del form gris */
+            color: var(--color-texto);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        textarea { resize: vertical; min-height: 60px; }
+        #btn-agregar { padding: 12px; background-color: var(--color-primario); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
+
+        /* Filtros y Herramientas */
+        .barra-herramientas {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #filtro-tiempo {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--color-borde);
+            background-color: var(--color-fondo-input);
+            color: var(--color-texto);
+        }
+
+        /* Tabla */
+        #lista-transacciones { width: 100%; border-collapse: collapse; }
+        #lista-transacciones th { text-align: left; padding: 10px; border-bottom: 2px solid var(--color-borde); color: var(--color-texto-secundario); font-size: 0.85rem; }
+        #lista-transacciones td { padding: 12px 8px; border-bottom: 1px solid var(--color-borde-lista); vertical-align: top; }
+        
+        .monto-gasto { font-weight: 700; color: var(--color-error); white-space: nowrap; }
+        .monto-ingreso { font-weight: 700; color: var(--color-verde); white-space: nowrap; }
+        .descripcion { font-weight: 500; }
+        .nota-item { font-size: 0.85rem; color: var(--color-texto-secundario); font-style: italic; margin-top: 2px; display: block; }
+        .meta-data { font-size: 0.75rem; color: var(--color-texto-secundario); display: block; margin-top: 4px; }
+        
+        .btn-borrar { background: none; border: none; color: var(--color-texto-secundario); font-size: 1.2rem; cursor: pointer; padding: 0 5px; }
+        .btn-borrar:hover { color: var(--color-error); }
+
+        /* Exportar */
+        .seccion-exportar {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-borde);
+            display: flex;
+            gap: 10px;
+        }
+        .btn-exportar {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--color-borde);
+            background-color: var(--color-fondo-input);
+            color: var(--color-texto);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .btn-exportar:hover { background-color: var(--color-secundario); }
+
+        #btn-logout { background-color: var(--color-error); color: white; width: 100%; margin-top: 20px; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        #user-info { text-align: center; margin-top: 10px; font-size: 0.8rem; color: var(--color-texto-secundario); }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- Login -->
+        <div id="login-container">
+            <h1>Bienvenida</h1>
+            <p>Tu control de gastos y ganancias.</p>
+            <div id="login-form">
+                <input type="email" id="email" placeholder="Correo electrónico">
+                <input type="password" id="password" placeholder="Contraseña">
+                <button id="btn-login-email">Iniciar Sesión</button>
+                <button id="btn-register-email">Registrar</button>
+                <button id="forgot-password-link">Olvidé mi contraseña</button>
+            </div>
+            <p>O continúa sin cuenta:</p>
+            <button id="btn-login-anonimo">Entrar como Anónimo</button>
+            <p id="login-status" style="margin-top: 15px; color: #777;"></p>
+        </div>
+
+        <!-- App -->
+        <div id="app-container">
+            <h1 id="app-title">Didi Tracker 🚲</h1>
+            
+            <div id="resumen-balance">
+                <h2>Balance <span id="label-periodo">Total</span></h2>
+                <span id="balance-neto" class="balance-positivo">$0.00</span>
+                <div id="resumen-detalle">
+                    <span>Ingresos: <b id="total-ingresos" style="color:var(--color-verde)">$0.00</b></span>
+                    <span>Gastos: <b id="total-gastos" style="color:var(--color-error)">$0.00</b></span>
+                </div>
+            </div>
+
+            <form id="form-transaccion">
+                <div class="fila-form">
+                    <div class="campo-form">
+                        <label>Tipo</label>
+                        <select id="tipo">
+                            <option value="ingreso">Ingreso 🤑</option>
+                            <option value="gasto">Gasto 🙄</option>
+                        </select>
+                    </div>
+                    <div class="campo-form">
+                        <label>Fecha</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                </div>
+                
+                <div class="fila-form">
+                    <div class="campo-form" style="flex: 2;">
+                        <label>Descripción</label>
+                        <input type="text" id="descripcion" placeholder="Ej: Viaje Polanco" required>
+                    </div>
+                    <div class="campo-form">
+                        <label>Monto</label>
+                        <input type="number" id="monto" min="0.01" step="0.01" placeholder="$" required>
+                    </div>
+                </div>
+
+                <div class="campo-form">
+                    <label>Categoría</label>
+                    <select id="categoria">
+                        <!-- JS lo llena -->
+                    </select>
+                </div>
+
+                <div class="campo-form">
+                    <label>Notas (Opcional)</label>
+                    <textarea id="notas" placeholder="Detalles extra..."></textarea>
+                </div>
+
+                <button type="submit" id="btn-agregar">Guardar</button>
+            </form>
+
+            <div class="barra-herramientas">
+                <h2>Historial</h2>
+                <select id="filtro-tiempo">
+                    <option value="todos">Todo el historial</option>
+                    <option value="mes">Este Mes</option>
+                    <option value="semana">Esta Semana</option>
+                </select>
+            </div>
+
+            <table id="lista-transacciones">
+                <thead>
+                    <tr>
+                        <th>Actividad</th>
+                        <th style="text-align: right;">Monto</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-transacciones"></tbody>
+            </table>
+
+            <div class="seccion-exportar">
+                <button class="btn-exportar" id="btn-export-excel">📄 Excel (CSV)</button>
+                <button class="btn-exportar" id="btn-export-pdf">📑 PDF</button>
+            </div>
+
+            <button id="btn-logout">Cerrar Sesión</button>
+            <div id="user-info"></div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // CONFIGURACIÓN (Tu misma config)
+        const firebaseConfig = {
+          apiKey: "AIzaSyDw4ekPFGAhHmSppWp-EZRXWTpnGL8f9ZA",
+          authDomain: "tangamangaming-61473.firebaseapp.com",
+          databaseURL: "https://tangamangaming-61473-default-rtdb.firebaseio.com",
+          projectId: "tangamangaming-61473",
+          storageBucket: "tangamangaming-61473.firebasestorage.app",
+          messagingSenderId: "368255199941",
+          appId: "1:368255199941:web:b87d904dc39bc670091eac",
+          measurementId: "G-28KQ9NPH5R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        
+        // ESTADO GLOBAL
+        let currentUserId = null;
+        let didiTrackerRef = null;
+        let todasLasTransacciones = []; // Guardamos copia local para filtrar
+        
+        // Categorías
+        const categoriasIngreso = ["Didi 🚲", "Propinas", "Otro Ingreso"];
+        const categoriasGasto = ["Mawui Mawui 🙄", "Comida", "Hidratación", "Mantenimiento 🔧", "Refacciones", "Celular/Datos", "Otros"];
+
+        // DOM ELEMENTS
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.getElementById('app-container');
+        const tbody = document.getElementById('tbody-transacciones');
+        const filtroTiempo = document.getElementById('filtro-tiempo');
+        const labelPeriodo = document.getElementById('label-periodo');
+        
+        // AUTH LISTENERS (Resumidos)
+        document.getElementById('btn-login-anonimo').onclick = () => signInAnonymously(auth);
+        document.getElementById('btn-register-email').onclick = () => {
+            const e = document.getElementById('email').value, p = document.getElementById('password').value;
+            if(e && p) createUserWithEmailAndPassword(auth, e, p).then(()=>alert("Registrado")).catch(e=>alert(e.message));
+        };
+        document.getElementById('btn-login-email').onclick = () => {
+            const e = document.getElementById('email').value, p = document.getElementById('password').value;
+            if(e && p) signInWithEmailAndPassword(auth, e, p).catch(e=>alert(e.message));
+        };
+        document.getElementById('forgot-password-link').onclick = () => {
+            const e = document.getElementById('email').value;
+            if(e) sendPasswordResetEmail(auth, e).then(()=>alert("Correo enviado")).catch(e=>alert(e.message));
+        };
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+        // AUTH STATE CHANGE
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                didiTrackerRef = ref(db, 'didiTracker/' + currentUserId);
+                
+                loginContainer.style.display = 'none';
+                appContainer.style.display = 'block';
+                document.getElementById('user-info').textContent = `ID: ${user.email || 'Anónimo'}`;
+                
+                // Cargar datos
+                onValue(didiTrackerRef, (snapshot) => {
+                    const data = snapshot.val() || {};
+                    todasLasTransacciones = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                    todasLasTransacciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                    aplicarFiltros(); // Renderiza
+                });
+
+                document.getElementById('fecha').valueAsDate = new Date();
+                actualizarCategorias();
+            } else {
+                loginContainer.style.display = 'block';
+                appContainer.style.display = 'none';
+                todasLasTransacciones = [];
+            }
+        });
+
+        // UI LOGIC
+        const tipoSelect = document.getElementById('tipo');
+        const catSelect = document.getElementById('categoria');
+        tipoSelect.addEventListener('change', actualizarCategorias);
+        
+        function actualizarCategorias() {
+            catSelect.innerHTML = '';
+            const cats = tipoSelect.value === 'ingreso' ? categoriasIngreso : categoriasGasto;
+            cats.forEach(c => {
+                const op = document.createElement('option');
+                op.value = c; op.innerText = c;
+                catSelect.appendChild(op);
+            });
+        }
+
+        // AGREGAR TRANSACCION
+        document.getElementById('form-transaccion').onsubmit = (e) => {
+            e.preventDefault();
+            if (!didiTrackerRef) return;
+
+            const nuevaTx = {
+                tipo: tipoSelect.value,
+                descripcion: document.getElementById('descripcion').value.trim(),
+                monto: parseFloat(document.getElementById('monto').value),
+                categoria: catSelect.value,
+                notas: document.getElementById('notas').value.trim(), // Nuevo campo
+                fecha: document.getElementById('fecha').value
+            };
+
+            push(didiTrackerRef, nuevaTx).then(() => {
+                document.getElementById('form-transaccion').reset();
+                document.getElementById('fecha').valueAsDate = new Date();
+                actualizarCategorias();
+            }).catch(err => alert("Error al guardar: " + err.message));
+        };
+
+        // BORRAR
+        tbody.addEventListener('click', (e) => {
+            if(e.target.closest('.btn-borrar')) {
+                const id = e.target.closest('.btn-borrar').dataset.id;
+                if(confirm("¿Borrar?")) remove(ref(db, `didiTracker/${currentUserId}/${id}`));
+            }
+        });
+
+        // FILTROS
+        filtroTiempo.addEventListener('change', aplicarFiltros);
+
+        function aplicarFiltros() {
+            const filtro = filtroTiempo.value;
+            const hoy = new Date();
+            let datosFiltrados = [];
+
+            if (filtro === 'todos') {
+                datosFiltrados = todasLasTransacciones;
+                labelPeriodo.innerText = "Total";
+            } else if (filtro === 'mes') {
+                datosFiltrados = todasLasTransacciones.filter(t => {
+                    const d = new Date(t.fecha + 'T00:00:00'); // Fix timezone issues
+                    return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
+                });
+                labelPeriodo.innerText = "Este Mes";
+            } else if (filtro === 'semana') {
+                // Calcular inicio de semana (Lunes)
+                const primerDiaSemana = new Date(hoy);
+                const dia = hoy.getDay() || 7; // Hacer domingo dia 7
+                primerDiaSemana.setHours(0,0,0,0);
+                primerDiaSemana.setDate(primerDiaSemana.getDate() - dia + 1);
+
+                datosFiltrados = todasLasTransacciones.filter(t => {
+                    const d = new Date(t.fecha + 'T00:00:00');
+                    return d >= primerDiaSemana;
+                });
+                labelPeriodo.innerText = "Esta Semana";
+            }
+
+            renderizarTabla(datosFiltrados);
+            calcularBalance(datosFiltrados);
+        }
+
+        function renderizarTabla(lista) {
+            tbody.innerHTML = '';
+            if(lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px; color:#777">No hay datos en este periodo.</td></tr>';
+                return;
+            }
+
+            lista.forEach(t => {
+                const esIngreso = t.tipo === 'ingreso';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="descripcion">${t.descripcion}</div>
+                        ${t.notas ? `<span class="nota-item">📝 ${t.notas}</span>` : ''}
+                        <span class="meta-data">${t.categoria} • ${formatearFecha(t.fecha)}</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="${esIngreso ? 'monto-ingreso' : 'monto-gasto'}">
+                            ${esIngreso ? '+' : '-'}$${t.monto.toFixed(2)}
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="btn-borrar" data-id="${t.id}">×</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function calcularBalance(lista) {
+            let ing = 0, gas = 0;
+            lista.forEach(t => t.tipo === 'ingreso' ? ing += t.monto : gas += t.monto);
+            
+            document.getElementById('total-ingresos').innerText = `$${ing.toFixed(2)}`;
+            document.getElementById('total-gastos').innerText = `$${gas.toFixed(2)}`;
+            
+            const total = ing - gas;
+            const elBalance = document.getElementById('balance-neto');
+            elBalance.innerText = `$${total.toFixed(2)}`;
+            elBalance.className = total >= 0 ? 'balance-positivo' : 'balance-negativo';
+        }
+
+        function formatearFecha(f) {
+            const [y, m, d] = f.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        // --- EXPORTAR ---
+        
+        // CSV
+        document.getElementById('btn-export-excel').onclick = () => {
+            if(todasLasTransacciones.length === 0) return alert("Nada que exportar");
+            
+            let csv = "Fecha,Tipo,Categoria,Descripcion,Notas,Monto\n";
+            todasLasTransacciones.forEach(t => {
+                const montoSigno = t.tipo === 'ingreso' ? t.monto : -t.monto;
+                // Limpiar textos para no romper el CSV
+                const desc = t.descripcion.replace(/,/g, ' ');
+                const nota = (t.notas || '').replace(/,/g, ' ');
+                csv += `${t.fecha},${t.tipo},${t.categoria},${desc},${nota},${montoSigno}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Didi_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        };
+
+        // PDF
+        document.getElementById('btn-export-pdf').onclick = () => {
+            if(todasLasTransacciones.length === 0) return alert("Nada que exportar");
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.text("Reporte Didi Tracker 🚲", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 26);
+
+            const tableData = todasLasTransacciones.map(t => [
+                t.fecha,
+                t.tipo.toUpperCase(),
+                t.categoria,
+                t.descripcion + (t.notas ? ` (${t.notas})` : ''),
+                (t.tipo === 'ingreso' ? '+' : '-') + `$${t.monto.toFixed(2)}`
+            ]);
+
+            doc.autoTable({
+                head: [['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']],
+                body: tableData,
+                startY: 30,
+                theme: 'grid',
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [0, 123, 255] }
+            });
+
+            doc.save(`Reporte_Didi_${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+    </script>
+</body>
+</html>
