@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Didi Tracker Pro 🚲</title>
+    <!-- Librerías para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -255,7 +256,7 @@
 
             <div class="seccion-exportar">
                 <button class="btn-exportar" id="btn-export-excel">📄 Excel (CSV)</button>
-                <button class="btn-exportar" id="btn-export-pdf">📑 PDF</button>
+                <button class="btn-exportar" id="btn-export-pdf">📑 PDF (Limpio)</button>
             </div>
 
             <button id="btn-logout">Cerrar Sesión</button>
@@ -287,7 +288,7 @@
         // ESTADO GLOBAL
         let currentUserId = null;
         let didiTrackerRef = null;
-        let todasLasTransacciones = []; // Guardamos copia local para filtrar
+        let todasLasTransacciones = [];
         
         // Categorías
         const categoriasIngreso = ["Didi 🚲", "Propinas", "Otro Ingreso"];
@@ -300,7 +301,7 @@
         const filtroTiempo = document.getElementById('filtro-tiempo');
         const labelPeriodo = document.getElementById('label-periodo');
         
-        // AUTH LISTENERS (Resumidos)
+        // AUTH LISTENERS
         document.getElementById('btn-login-anonimo').onclick = () => signInAnonymously(auth);
         document.getElementById('btn-register-email').onclick = () => {
             const e = document.getElementById('email').value, p = document.getElementById('password').value;
@@ -368,7 +369,7 @@
                 descripcion: document.getElementById('descripcion').value.trim(),
                 monto: parseFloat(document.getElementById('monto').value),
                 categoria: catSelect.value,
-                notas: document.getElementById('notas').value.trim(), // Nuevo campo
+                notas: document.getElementById('notas').value.trim(),
                 fecha: document.getElementById('fecha').value
             };
 
@@ -400,14 +401,13 @@
                 labelPeriodo.innerText = "Total";
             } else if (filtro === 'mes') {
                 datosFiltrados = todasLasTransacciones.filter(t => {
-                    const d = new Date(t.fecha + 'T00:00:00'); // Fix timezone issues
+                    const d = new Date(t.fecha + 'T00:00:00');
                     return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
                 });
                 labelPeriodo.innerText = "Este Mes";
             } else if (filtro === 'semana') {
-                // Calcular inicio de semana (Lunes)
                 const primerDiaSemana = new Date(hoy);
-                const dia = hoy.getDay() || 7; // Hacer domingo dia 7
+                const dia = hoy.getDay() || 7;
                 primerDiaSemana.setHours(0,0,0,0);
                 primerDiaSemana.setDate(primerDiaSemana.getDate() - dia + 1);
 
@@ -478,7 +478,6 @@
             let csv = "Fecha,Tipo,Categoria,Descripcion,Notas,Monto\n";
             todasLasTransacciones.forEach(t => {
                 const montoSigno = t.tipo === 'ingreso' ? t.monto : -t.monto;
-                // Limpiar textos para no romper el CSV
                 const desc = t.descripcion.replace(/,/g, ' ');
                 const nota = (t.notas || '').replace(/,/g, ' ');
                 csv += `${t.fecha},${t.tipo},${t.categoria},${desc},${nota},${montoSigno}\n`;
@@ -492,32 +491,45 @@
             a.click();
         };
 
-        // PDF
+        // PDF CORREGIDO (Sin Emojis)
         document.getElementById('btn-export-pdf').onclick = () => {
             if(todasLasTransacciones.length === 0) return alert("Nada que exportar");
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            doc.text("Reporte Didi Tracker 🚲", 14, 20);
+            // Función auxiliar para quitar emojis
+            const cleanText = (str) => {
+                if(!str) return "";
+                return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+            };
+
+            doc.text("Reporte Didi Tracker", 14, 20); // Texto limpio
             doc.setFontSize(10);
             doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 26);
 
             const tableData = todasLasTransacciones.map(t => [
                 t.fecha,
                 t.tipo.toUpperCase(),
-                t.categoria,
-                t.descripcion + (t.notas ? ` (${t.notas})` : ''),
+                cleanText(t.categoria), // Limpiamos emojis de categoría
+                cleanText(t.descripcion + (t.notas ? ` (${t.notas})` : '')), // Limpiamos descripción
                 (t.tipo === 'ingreso' ? '+' : '-') + `$${t.monto.toFixed(2)}`
             ]);
 
             doc.autoTable({
-                head: [['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto']],
+                head: [['Fecha', 'Tipo', 'Categoria', 'Descripcion', 'Monto']], // Sin acentos para evitar líos
                 body: tableData,
                 startY: 30,
                 theme: 'grid',
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [0, 123, 255] }
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [0, 123, 255] },
+                columnStyles: {
+                    0: { cellWidth: 20 }, // Fecha
+                    1: { cellWidth: 15 }, // Tipo
+                    2: { cellWidth: 35 }, // Categoría
+                    3: { cellWidth: 'auto' }, // Descripción (Auto para que ocupe el resto)
+                    4: { cellWidth: 20, halign: 'right' } // Monto
+                }
             });
 
             doc.save(`Reporte_Didi_${new Date().toISOString().slice(0,10)}.pdf`);
