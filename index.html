@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Didi Tracker 🚲</title>
+    <style>
+        :root {
+            /* Definición de colores para Modo Claro (default) */
+            --color-primario: #007bff;
+            --color-secundario: #f8f9fa; /* Fondo de header de tabla */
+            --color-texto: #333;
+            --color-texto-secundario: #777;
+            --color-error: #dc3545;
+            --color-verde: #28a745;
+            --color-fondo-body: #f4f4f4;
+            --color-fondo-main: #ffffff;
+            --color-fondo-input: #ffffff;
+            --color-borde: #ccc;
+            --color-borde-lista: #ddd;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Redefinición de colores para Modo Oscuro */
+                --color-primario: #007bff; 
+                --color-secundario: #33373a;
+                --color-texto: #e0e0e0;
+                --color-texto-secundario: #999;
+                --color-fondo-body: #121212;
+                --color-fondo-main: #1e1e1e;
+                --color-fondo-input: #252525;
+                --color-borde: #444;
+                --color-borde-lista: #444;
+            }
+            .campo-form input, .campo-form select {
+                background-color: var(--color-fondo-input);
+                color: var(--color-texto);
+            }
+            input::placeholder { color: #777; }
+            input::-webkit-input-placeholder { color: #777; }
+            input::-moz-placeholder { color: #777; }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-fondo-body);
+            color: var(--color-texto);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        main {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--color-fondo-main);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* --- Contenedor de Login (Sin cambios) --- */
+        #login-container { text-align: center; }
+        #login-container h1 { color: var(--color-primario); }
+        #login-form { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        #login-form input { padding: 10px; border: 1px solid var(--color-borde); background-color: var(--color-fondo-input); color: var(--color-texto); border-radius: 5px; font-size: 1rem; }
+        #login-form button, #btn-login-anonimo { padding: 12px; background-color: var(--color-primario); color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        #btn-login-anonimo { background-color: var(--color-verde); }
+        #login-form button:hover { background-color: #0056b3; }
+        #forgot-password-link { background: transparent; border: none; color: var(--color-primario); font-size: 0.9rem; font-weight: normal; cursor: pointer; padding: 5px; margin-top: 5px; text-decoration: underline; }
+        #btn-login { padding: 12px 20px; background-color: var(--color-verde); color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        #login-status { color: var(--color-texto-secundario); margin-top:15px; }
+        
+        /* --- Contenedor de la App --- */
+        #app-container { display: none; }
+        h1, h2 { text-align: center; color: var(--color-primario); }
+        
+        /* (NUEVO) Resumen de Balance */
+        #resumen-balance {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--color-secundario);
+        }
+        #resumen-balance h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: var(--color-primario);
+        }
+        #balance-neto {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .balance-positivo { color: var(--color-verde); }
+        .balance-negativo { color: var(--color-error); }
+        #resumen-detalle {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        #total-ingresos { color: var(--color-verde); font-weight: 600; }
+        #total-gastos { color: var(--color-error); font-weight: 600; }
+        
+        /* Formulario de Transacción */
+        #form-transaccion { display: flex; flex-direction: column; gap: 15px; }
+        .campo-form { display: flex; flex-direction: column; }
+        .campo-form label { margin-bottom: 5px; font-weight: 600; }
+        .campo-form input,
+        .campo-form select {
+            padding: 10px;
+            border: 1px solid var(--color-borde);
+            background-color: var(--color-fondo-input);
+            color: var(--color-texto);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        #btn-agregar {
+            padding: 12px;
+            background-color: var(--color-primario);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        /* Tabla de Historial */
+        #lista-transacciones {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #lista-transacciones th,
+        #lista-transacciones td {
+            border-bottom: 1px solid var(--color-borde-lista);
+            padding: 12px 8px;
+            text-align: left;
+        }
+        #lista-transacciones th { background-color: var(--color-secundario); }
+        
+        .monto-gasto { font-weight: 600; color: var(--color-error); white-space: nowrap; }
+        .monto-ingreso { font-weight: 600; color: var(--color-verde); white-space: nowrap; }
+        .descripcion { word-break: break-all; }
+        .transaccion-meta { color: var(--color-texto-secundario); }
+
+        /* Botones */
+        .btn-borrar {
+            background-color: var(--color-error);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        #btn-limpiar-todo {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: var(--color-error);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #btn-logout {
+            background-color: var(--color-error);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        #user-info {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--color-texto-secundario);
+            margin-top: 10px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- PASO 1: Pantalla de Login -->
+        <div id="login-container">
+            <h1>Bienvenida</h1>
+            <p>Inicia sesión o regístrate.</p>
+            
+            <div id="login-form">
+                <input type="email" id="email" placeholder="Correo electrónico" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button id="btn-login-email">Iniciar Sesión</button>
+                <button id="btn-register-email">Registrar</button>
+                <button id="forgot-password-link" type="button">Olvidé mi contraseña</button>
+            </div>
+            <p>O bien...</p>
+            <button id="btn-login-anonimo">Continuar Anónimamente</button>
+            <p id="login-status"></p>
+        </div>
+
+        <!-- PASO 2: Aplicación principal -->
+        <div id="app-container">
+            <h1 id="app-title">Didi Tracker 🚲</h1>
+            
+            <!-- (NUEVO) Resumen de Balance -->
+            <div id="resumen-balance">
+                <h2>Balance Neto</h2>
+                <span id="balance-neto" class="balance-positivo">$0.00</span>
+                <div id="resumen-detalle">
+                    <span>Ganancias: <b id="total-ingresos">$0.00</b></span>
+                    <span>Gastos: <b id="total-gastos">$0.00</b></span>
+                </div>
+            </div>
+
+            <!-- Formulario de Transacción -->
+            <h2>Nueva Transacción</h2>
+            <form id="form-transaccion">
+                <!-- (NUEVO) Tipo de Transacción -->
+                <div class="campo-form">
+                    <label for="tipo">Tipo:</label>
+                    <select id="tipo">
+                        <option value="ingreso">Ingreso 🤑</option>
+                        <option value="gasto">Gasto 🙄</option>
+                    </select>
+                </div>
+                
+                <div class="campo-form">
+                    <label for="descripcion">Descripción:</label>
+                    <input type="text" id="descripcion" placeholder="Ej: Viaje a Polanco" required>
+                </div>
+                
+                <div class="campo-form">
+                    <label for="monto">Monto:</label>
+                    <input type="number" id="monto" min="0.01" step="0.01" placeholder="Ej: 80.50" required>
+                </div>
+
+                <div class="campo-form">
+                    <label for="categoria">Categoría:</label>
+                    <select id="categoria">
+                        <!-- Se llena dinámicamente con JS -->
+                    </select>
+                </div>
+                
+                <div class="campo-form">
+                    <label for="fecha">Fecha:</label>
+                    <input type="date" id="fecha" required>
+                </div>
+
+                <button type="submit" id="btn-agregar">Agregar</button>
+            </form>
+
+            <!-- Historial de Transacciones -->
+            <h2>Historial</h2>
+            <table id="lista-transacciones">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Monto</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-transacciones">
+                    <!-- Las transacciones se cargarán desde Firebase -->
+                </tbody>
+            </table>
+
+            <button id="btn-limpiar-todo">Borrar Todo el Historial</button>
+            <div id="user-info"></div>
+            <button id="btn-logout">Cerrar Sesión</button>
+        </div>
+    </main>
+
+    <!-- Importar SDKs de Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // --- 1. CONFIGURACIÓN DE FIREBASE (Sin cambios) ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDw4ekPFGAhHmSppWp-EZRXWTpnGL8f9ZA",
+          authDomain: "tangamangaming-61473.firebaseapp.com",
+          databaseURL: "https://tangamangaming-61473-default-rtdb.firebaseio.com",
+          projectId: "tangamangaming-61473",
+          storageBucket: "tangamangaming-61473.firebasestorage.app",
+          messagingSenderId: "368255199941",
+          appId: "1:368255199941:web:b87d904dc39bc670091eac",
+          measurementId: "G-28KQ9NPH5R"
+        };
+
+        // --- 2. INICIALIZAR FIREBASE ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        
+        let currentUserId = null;
+        let didiTrackerRef = null; // (NUEVO) Referencia única
+
+        // --- 3. REFERENCIAS DEL DOM ---
+        // Login (sin cambios)
+        const loginContainer = document.getElementById('login-container');
+        const loginStatus = document.getElementById('login-status');
+        const btnLoginAnonimo = document.getElementById('btn-login-anonimo');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const btnLoginEmail = document.getElementById('btn-login-email');
+        const btnRegisterEmail = document.getElementById('btn-register-email');
+        const btnForgotPassword = document.getElementById('forgot-password-link');
+        
+        // App
+        const appContainer = document.getElementById('app-container');
+        const userInfo = document.getElementById('user-info');
+        const appTitle = document.getElementById('app-title');
+        const btnLogout = document.getElementById('btn-logout');
+        
+        // (NUEVO) Resumen Balance
+        const balanceNetoSpan = document.getElementById('balance-neto');
+        const totalIngresosSpan = document.getElementById('total-ingresos');
+        const totalGastosSpan = document.getElementById('total-gastos');
+
+        // Formulario Transacción
+        const form = document.getElementById('form-transaccion');
+        const tipoSelect = document.getElementById('tipo'); // (NUEVO)
+        const descripcionInput = document.getElementById('descripcion');
+        const montoInput = document.getElementById('monto');
+        const categoriaInput = document.getElementById('categoria');
+        const fechaInput = document.getElementById('fecha');
+        
+        // Historial
+        const tbodyTransacciones = document.getElementById('tbody-transacciones'); // (NUEVO)
+        const btnLimpiarTodo = document.getElementById('btn-limpiar-todo');
+        
+        // (NUEVO) Definición de Categorías
+        const categoriasIngreso = [
+            "Didi 🚲",
+            "Propinas",
+            "Otro Ingreso"
+        ];
+        const categoriasGasto = [
+            "Mawui Mawui 🙄",
+            "Comida",
+            "Bebida / Hidratación",
+            "Mantenimiento Bici 🔧",
+            "Refacciones",
+            "Servicios (Cel, etc)",
+            "Otros"
+        ];
+
+
+        // --- 4. LÓGICA DE AUTENTICACIÓN (Sin cambios) ---
+        // ... (Todos los listeners de login, register, forgot, logout) ...
+        btnLoginAnonimo.addEventListener('click', () => {
+            loginStatus.textContent = 'Iniciando sesión...';
+            signInAnonymously(auth).catch((error) => {
+                console.error("Error al iniciar sesión:", error);
+                loginStatus.textContent = `Error: ${error.message}`;
+            });
+        });
+        btnRegisterEmail.addEventListener('click', () => {
+            const email = emailInput.value; const password = passwordInput.value;
+            if (!email || !password) { loginStatus.textContent = 'Ingresa correo y contraseña.'; return; }
+            loginStatus.textContent = 'Registrando...';
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => { loginStatus.textContent = '¡Registrado con éxito!'; })
+                .catch((error) => { loginStatus.textContent = `Error: ${error.message}`; });
+        });
+        btnLoginEmail.addEventListener('click', () => {
+            const email = emailInput.value; const password = passwordInput.value;
+            if (!email || !password) { loginStatus.textContent = 'Ingresa correo y contraseña.'; return; }
+            loginStatus.textContent = 'Iniciando sesión...';
+            signInWithEmailAndPassword(auth, email, password)
+                .catch((error) => { loginStatus.textContent = `Error: ${error.message}`; });
+        });
+        btnLogout.addEventListener('click', () => {
+            signOut(auth).catch((error) => { console.error("Error al cerrar sesión:", error); });
+        });
+        btnForgotPassword.addEventListener('click', () => {
+            const email = emailInput.value;
+            if (!email) { loginStatus.textContent = 'Ingresa tu correo.'; return; }
+            loginStatus.textContent = 'Enviando correo...';
+            sendPasswordResetEmail(auth, email)
+                .then(() => { loginStatus.textContent = '¡Correo enviado!'; })
+                .catch((error) => { loginStatus.textContent = `Error: ${error.message}`; });
+        });
+
+        // Observador del estado de autenticación (ACTUALIZADO)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuario está logueado
+                currentUserId = user.uid;
+                didiTrackerRef = ref(db, 'didiTracker/' + currentUserId); // (NUEVO)
+                
+                loginContainer.style.display = 'none';
+                appContainer.style.display = 'block';
+                
+                const userDisplayName = user.email ? user.email.split('@')[0] : `Repartidor ${currentUserId.substring(0, 6)}`;
+                userInfo.textContent = `Sesión iniciada como: ${user.email ? user.email : 'Anónimo'}`;
+                appTitle.textContent = `${userDisplayName} 🚲`;
+                
+                escucharTransacciones(); // (NUEVO)
+                
+                fechaInput.valueAsDate = new Date();
+                actualizarCategorias(); // (NUEVO)
+                
+            } else {
+                // Usuario no está logueado
+                currentUserId = null;
+                didiTrackerRef = null;
+                
+                loginContainer.style.display = 'block';
+                appContainer.style.display = 'none';
+                loginStatus.textContent = '';
+                appTitle.textContent = 'Didi Tracker 🚲';
+            }
+        });
+
+        // --- (NUEVO) 5. LÓGICA DE LA APP ---
+
+        // (NUEVO) Llena las categorías según el tipo
+        function actualizarCategorias() {
+            const tipo = tipoSelect.value;
+            categoriaInput.innerHTML = ''; // Limpiar opciones
+            
+            const categorias = (tipo === 'ingreso') ? categoriasIngreso : categoriasGasto;
+            
+            categorias.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categoriaInput.appendChild(option);
+            });
+        }
+
+        // (NUEVO) Escucha la base de datos y recalcula todo
+        function escucharTransacciones() {
+            if (!didiTrackerRef) return;
+            
+            onValue(didiTrackerRef, (snapshot) => {
+                const transaccionesData = snapshot.val() || {};
+                
+                const transaccionesArray = Object.entries(transaccionesData).map(([id, data]) => ({
+                    id: id,
+                    ...data
+                }));
+                
+                // Ordenar por fecha (más nuevos primero)
+                transaccionesArray.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                
+                // Renderizar la tabla
+                renderizarHistorial(transaccionesArray);
+                
+                // Calcular y renderizar el balance
+                calcularBalance(transaccionesArray);
+            });
+        }
+
+        // (NUEVO) Renderiza solo el historial
+        function renderizarHistorial(transacciones) {
+            tbodyTransacciones.innerHTML = '';
+            if (transacciones.length === 0) {
+                tbodyTransacciones.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px;">No hay transacciones.</td></tr>';
+                return;
+            }
+
+            transacciones.forEach(t => {
+                const tr = document.createElement('tr');
+                const esIngreso = (t.tipo === 'ingreso');
+                const montoClase = esIngreso ? 'monto-ingreso' : 'monto-gasto';
+                const montoPrefijo = esIngreso ? '+$' : '-$';
+                
+                tr.innerHTML = `
+                    <td>
+                        <div class="descripcion">${t.descripcion}</div>
+                        <span class="transaccion-meta">${t.categoria} - ${formatearFecha(t.fecha)}</span>
+                    </td>
+                    <td class="${montoClase}">
+                        ${montoPrefijo}${parseFloat(t.monto).toFixed(2)}
+                    </td>
+                    <td>
+                        <button class="btn-borrar" data-id="${t.id}">X</button>
+                    </td>
+                `;
+                tbodyTransacciones.appendChild(tr);
+            });
+        }
+        
+        // (NUEVO) Calcula y muestra el balance
+        function calcularBalance(transacciones) {
+            let totalIngresos = 0;
+            let totalGastos = 0;
+            
+            transacciones.forEach(t => {
+                const monto = parseFloat(t.monto);
+                if (t.tipo === 'ingreso') {
+                    totalIngresos += monto;
+                } else {
+                    totalGastos += monto;
+                }
+            });
+            
+            const balanceNeto = totalIngresos - totalGastos;
+            
+            // Actualizar el DOM
+            totalIngresosSpan.textContent = `$${totalIngresos.toFixed(2)}`;
+            totalGastosSpan.textContent = `$${totalGastos.toFixed(2)}`;
+            balanceNetoSpan.textContent = `$${balanceNeto.toFixed(2)}`;
+            
+            // Cambiar color del balance
+            balanceNetoSpan.classList.remove('balance-positivo', 'balance-negativo');
+            if (balanceNeto > 0) {
+                balanceNetoSpan.classList.add('balance-positivo');
+            } else if (balanceNeto < 0) {
+                balanceNetoSpan.classList.add('balance-negativo');
+            }
+        }
+
+        // (NUEVO) Guarda la transacción
+        function agregarTransaccion(e) {
+            e.preventDefault();
+            
+            const tipo = tipoSelect.value;
+            const descripcion = descripcionInput.value.trim();
+            const monto = parseFloat(montoInput.value);
+            const categoria = categoriaInput.value;
+            const fecha = fechaInput.value;
+
+            if (!descripcion || !monto || monto <= 0 || !fecha || !didiTrackerRef) {
+                alert('Completa todos los campos.');
+                return;
+            }
+
+            const nuevaTransaccion = { tipo, descripcion, monto, categoria, fecha };
+            
+            const nuevaTransaccionRef = push(didiTrackerRef);
+            
+            set(nuevaTransaccionRef, nuevaTransaccion)
+                .then(() => {
+                    form.reset();
+                    fechaInput.valueAsDate = new Date();
+                    actualizarCategorias(); // Resetear categorías al default
+                })
+                .catch((error) => {
+                    console.error("Error al guardar:", error);
+                    alert("No se pudo guardar la transacción.");
+                });
+        }
+
+        // (NUEVO) Borra una transacción
+        function borrarTransaccion(e) {
+            if (!e.target.classList.contains('btn-borrar')) return;
+            
+            const transaccionId = e.target.dataset.id;
+            if (!transaccionId || !didiTrackerRef) return;
+            
+            if (confirm('¿Borrar esta transacción?')) {
+                const transaccionABorrarRef = ref(db, `didiTracker/${currentUserId}/${transaccionId}`);
+                remove(transaccionABorrarRef)
+                    .catch((error) => {
+                        console.error("Error al borrar:", error);
+                        alert("No se pudo borrar.");
+                    });
+            }
+        }
+
+        // (NUEVO) Limpia todo el historial
+        function limpiarTodo() {
+            if (!didiTrackerRef) return;
+            
+            if (confirm('¿Estás seguro de que quieres borrar TODO el historial de Didi?')) {
+                remove(didiTrackerRef)
+                    .catch((error) => {
+                        console.error("Error al limpiar todo:", error);
+                        alert("No se pudo borrar el historial.");
+                    });
+            }
+        }
+
+        function formatearFecha(fecha) {
+            const [year, month, day] = fecha.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // --- 6. EVENT LISTENERS GLOBALES ---
+        form.addEventListener('submit', agregarTransaccion);
+        tbodyTransacciones.addEventListener('click', borrarTransaccion);
+        btnLimpiarTodo.addEventListener('click', limpiarTodo);
+        tipoSelect.addEventListener('change', actualizarCategorias); // (NUEVO)
+
+    </script>
+</body>
+</html>
