@@ -491,44 +491,43 @@
             a.click();
         };
 
-        // PDF CORREGIDO (Sin Emojis)
+        // PDF CORREGIDO (Ancho de columna aumentado)
         document.getElementById('btn-export-pdf').onclick = () => {
             if(todasLasTransacciones.length === 0) return alert("Nada que exportar");
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // Función auxiliar para quitar emojis
             const cleanText = (str) => {
                 if(!str) return "";
                 return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
             };
 
-            doc.text("Reporte Didi Tracker", 14, 20); // Texto limpio
+            doc.text("Reporte Didi Tracker", 14, 20);
             doc.setFontSize(10);
             doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 26);
 
             const tableData = todasLasTransacciones.map(t => [
                 t.fecha,
                 t.tipo.toUpperCase(),
-                cleanText(t.categoria), // Limpiamos emojis de categoría
-                cleanText(t.descripcion + (t.notas ? ` (${t.notas})` : '')), // Limpiamos descripción
+                cleanText(t.categoria),
+                cleanText(t.descripcion + (t.notas ? ` (${t.notas})` : '')),
                 (t.tipo === 'ingreso' ? '+' : '-') + `$${t.monto.toFixed(2)}`
             ]);
 
             doc.autoTable({
-                head: [['Fecha', 'Tipo', 'Categoria', 'Descripcion', 'Monto']], // Sin acentos para evitar líos
+                head: [['Fecha', 'Tipo', 'Categoria', 'Descripcion', 'Monto']],
                 body: tableData,
                 startY: 30,
                 theme: 'grid',
                 styles: { fontSize: 8, cellPadding: 2 },
                 headStyles: { fillColor: [0, 123, 255] },
                 columnStyles: {
-                    0: { cellWidth: 20 }, // Fecha
-                    1: { cellWidth: 15 }, // Tipo
-                    2: { cellWidth: 35 }, // Categoría
-                    3: { cellWidth: 'auto' }, // Descripción (Auto para que ocupe el resto)
-                    4: { cellWidth: 20, halign: 'right' } // Monto
+                    0: { cellWidth: 20 },
+                    1: { cellWidth: 25 }, // Aumentado de 15 a 25 para que quepa "INGRESO"
+                    2: { cellWidth: 35 },
+                    3: { cellWidth: 'auto' },
+                    4: { cellWidth: 20, halign: 'right' }
                 }
             });
 
