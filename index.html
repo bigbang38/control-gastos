@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Didi Tracker Pro 🚲</title>
+    <title>Reparto Tracker Pro 🚲</title>
     <!-- Librerías para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -167,7 +167,7 @@
         <!-- Login -->
         <div id="login-container">
             <h1>Bienvenida</h1>
-            <p>Tu control de gastos y ganancias.</p>
+            <p>Control de Reparto Didi/Uber</p>
             <div id="login-form">
                 <input type="email" id="email" placeholder="Correo electrónico">
                 <input type="password" id="password" placeholder="Contraseña">
@@ -182,7 +182,7 @@
 
         <!-- App -->
         <div id="app-container">
-            <h1 id="app-title">Didi Tracker 🚲</h1>
+            <h1 id="app-title">Reparto Tracker 🚲</h1>
             
             <div id="resumen-balance">
                 <h2>Balance <span id="label-periodo">Total</span></h2>
@@ -211,7 +211,7 @@
                 <div class="fila-form">
                     <div class="campo-form" style="flex: 2;">
                         <label>Descripción</label>
-                        <input type="text" id="descripcion" placeholder="Ej: Viaje Polanco" required>
+                        <input type="text" id="descripcion" placeholder="Ej: Pedido Polanco" required>
                     </div>
                     <div class="campo-form">
                         <label>Monto</label>
@@ -269,7 +269,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // CONFIGURACIÓN (Tu misma config)
+        // CONFIGURACIÓN
         const firebaseConfig = {
           apiKey: "AIzaSyDw4ekPFGAhHmSppWp-EZRXWTpnGL8f9ZA",
           authDomain: "tangamangaming-61473.firebaseapp.com",
@@ -290,8 +290,8 @@
         let didiTrackerRef = null;
         let todasLasTransacciones = [];
         
-        // Categorías
-        const categoriasIngreso = ["Didi 🚲", "Propinas", "Otro Ingreso"];
+        // Categorías (¡AQUÍ ESTÁ EL CAMBIO!)
+        const categoriasIngreso = ["Didi 🚲", "Uber 🚲", "Propinas", "Otro Ingreso"];
         const categoriasGasto = ["Mawui Mawui 🙄", "Comida", "Hidratación", "Mantenimiento 🔧", "Refacciones", "Celular/Datos", "Otros"];
 
         // DOM ELEMENTS
@@ -487,11 +487,11 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Reporte_Didi_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `Reporte_Reparto_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
         };
 
-        // PDF CORREGIDO (Ancho de columna aumentado)
+        // PDF CORREGIDO (Ancho de columna ajustado para Uber también)
         document.getElementById('btn-export-pdf').onclick = () => {
             if(todasLasTransacciones.length === 0) return alert("Nada que exportar");
             
@@ -503,7 +503,7 @@
                 return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
             };
 
-            doc.text("Reporte Didi Tracker", 14, 20);
+            doc.text("Reporte Reparto Tracker", 14, 20);
             doc.setFontSize(10);
             doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 26);
 
@@ -524,14 +524,14 @@
                 headStyles: { fillColor: [0, 123, 255] },
                 columnStyles: {
                     0: { cellWidth: 20 },
-                    1: { cellWidth: 25 }, // Aumentado de 15 a 25 para que quepa "INGRESO"
+                    1: { cellWidth: 25 }, 
                     2: { cellWidth: 35 },
                     3: { cellWidth: 'auto' },
                     4: { cellWidth: 20, halign: 'right' }
                 }
             });
 
-            doc.save(`Reporte_Didi_${new Date().toISOString().slice(0,10)}.pdf`);
+            doc.save(`Reporte_Reparto_${new Date().toISOString().slice(0,10)}.pdf`);
         };
 
     </script>
